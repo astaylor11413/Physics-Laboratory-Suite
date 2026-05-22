@@ -492,6 +492,18 @@
 
         }
 
+        function executeClipboardCopy(textToCopy) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    alert("SUCCESS: Your work snapshot has been saved! The short resume URL has been copied directly to your clipboard.");
+                }).catch(() => {
+                    fallbackCopyExecute(textToCopy);
+                });
+            } else {
+                fallbackCopyExecute(textToCopy);
+            }
+        }
+
         function fallbackCopyExecute(textUrl) {
             const fallbackTextNode = document.createElement("textarea");
             fallbackTextNode.value = textUrl;
