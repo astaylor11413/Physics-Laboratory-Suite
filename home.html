@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NYS Physics Lab: Electromagnetic Induction Suite</title>
+    <link rel="stylesheet" href="./style.css">
+    <script src="./script.js" defer></script>
+</head>
+<body>
+
+    <header>
+        <h1>NYS Physical Setting: Physics Laboratory Suite</h1>
+        <p class="subtitle">Electromagnetic Induction Laboratory Protocol Ecosystem</p>
+    </header>
+
+    <div class="system-utility-bar">
+        <div class="link-container">
+            <button class="btn-action btn-p" style="padding: 8px 14px; flex: initial;" onclick="generateResumeStateLink()">Generate Work Resume Link</button>
+            <div class="url-box" id="resumeUrlOutput">No snapshot compiled yet. Click button to construct live backup link...</div>
+        </div>
+        <button class="btn-action" style="background: #ea580c; color: white;" onclick="exportCompletePacketsToPDF()">Export Completed Packets to PDF</button>
+    </div>
+
+    <div class="nav-tabs">
+        <button class="tab-btn active" id="tabBtnP1" onclick="switchMainTab('P1')">Student Answer Packet 1 (Lab Run)</button>
+        <button class="tab-btn" id="tabBtnP2" onclick="switchMainTab('P2')">Student Answer Packet 2 (Independent Analysis)</button>
+    </div>
+
+    <div class="workspace-container">
+        <div class="left-simulation-block">
+            <div class="inventory-panel" id="p1Inventory">
+                <div class="panel-title">Equipment Manifest</div>
+                <div class="inv-item" draggable="true" id="inv_pvc" ondragstart="spawnAsset(event, 'pvc')">2-Foot PVC Pipe</div>
+                <div class="inv-item" draggable="true" id="inv_sand" ondragstart="spawnAsset(event, 'sand')">Sandpaper Block</div>
+                <div class="inv-item" draggable="true" id="inv_spacer" ondragstart="spawnAsset(event, 'spacer')">3"x5" Index Card Spacer</div>
+                <div class="inv-item" draggable="true" id="inv_chassis" ondragstart="spawnAsset(event, 'chassis')">5"x8" Index Card Chassis</div>
+                <div class="inv-item" draggable="true" id="inv_tape" ondragstart="spawnAsset(event, 'tape')">Electrical Tape</div>
+                <div class="inv-item" draggable="true" id="inv_ptape" ondragstart="spawnAsset(event, 'ptape')">Packaging Tape</div>
+                <div class="inv-item" draggable="true" id="inv_wire300" ondragstart="spawnAsset(event, 'wire300')">28 AWG Wire (300-Turn)</div>
+                <div class="inv-item" draggable="true" id="inv_wire400" ondragstart="spawnAsset(event, 'wire400')">28 AWG Wire (400-Turn)</div>
+                <div class="inv-item" draggable="true" id="inv_compass" ondragstart="spawnAsset(event, 'compass')">Magnetic Compass</div>
+                <div class="inv-item" draggable="true" id="inv_battery" ondragstart="spawnAsset(event, 'battery')">2x D-Cell Battery (3.0V)</div>
+                <div class="inv-item" draggable="true" id="inv_dmm" ondragstart="spawnAsset(event, 'dmm')">Digital Multimeter</div>
+                <div class="inv-item" draggable="true" id="inv_ledred" ondragstart="spawnAsset(event, 'ledred')">Red LED Indicator</div>
+                <div class="inv-item" draggable="true" id="inv_ledblue" ondragstart="spawnAsset(event, 'ledblue')">Blue LED Indicator</div>
+                <div class="inv-item" draggable="true" id="inv_magnet" ondragstart="spawnAsset(event, 'magnet')">Neodymium Magnets</div>
+                <div class="inv-item" draggable="true" id="inv_nail" ondragstart="spawnAsset(event, 'nail')">Ferromagnetic Core Nail</div>
+            </div>
+
+            <div class="sandbox-area">
+                <div class="workspace-canvas" id="canvasDropzone" ondragover="allowDrop(event)" ondrop="handleDrop(event)">
+                    <div class="hud-overlay" id="canvasHud">Objective: Awaiting Step Alignment...</div>
+                    
+                    <div id="pvcTrack" class="drag-element pvc-base" style="display:none;" onmousedown="initDrag(event, 'pvcTrack')">
+                        <div id="vSpacer" class="drag-element spacer-sleeve" style="display:none; left: 110px; top:-4px;"></div>
+                        <div id="vChassis" class="drag-element chassis-sleeve" style="display:none; left:95px; top:-6px;">
+                            <div id="vTapeL" class="tape-mod-left"></div>
+                            <div id="vTapeR" class="tape-mod-right"></div>
+                            <div id="vCoil" class="coil-mod"></div>
+                            <div id="vLeadL" class="lead-line lead-L"></div>
+                            <div id="vLeadR" class="lead-line lead-R"></div>
+                            <div id="vShield" class="shield-mod"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="remove-hint">💡 Tip: Double-click any equipment item on the canvas to remove it from the workspace.</div>
+                <div id="statusAlert" style="display:none;"></div>
+            </div>
+        </div>
+
+        <div class="right-packet-block">
+            <div class="tab-content active" id="tabContentP1">
+                <div class="guide-panel">
+                    <div>
+                        <div class="task-card">
+                            <div class="task-step-number" id="stepNumberLabel">Step 1 of 25</div>
+                            <div id="taskObjective">Loading structural guidelines...</div>
+                        </div>
+                        <div class="panel-title">NYS Form Field Repository</div>
+                        <div class="packet-box" id="packetBox">
+                            <div id="formContainer">Initialization sequence pending.</div>
+                        </div>
+                    </div>
+                    <div class="action-btns">
+                        <button class="btn-action btn-s" id="btnPrevStep" onclick="regressToPreviousStep()" disabled>← Previous Step</button>
+                        <button class="btn-action btn-p" id="btnNextStep" onclick="progressToNextStep()" disabled>Complete Action →</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="tabContentP2">
+                <div class="p2-layout">
+                    <div class="panel-title" style="font-size: 1.1em;">Packet 2: Post-Lab Independent Summative Review</div>
+                    
+                    <div class="p2-qblock">
+                        <div class="p2-qtitle">Question 1</div>
+                        <p class="p2-qtext">In Part 2, your team modified the loop arrangement setup to change the output. Explain the structural physics mechanism showing how your design alteration affected the peak magnetic field produced.</p>
+                        <textarea id="p2_q1" rows="3" placeholder="Discuss changes in turns matrix, source voltage alterations, or introduction of interior core mediums..." oninput="saveP2Data('p2_q1')"></textarea>
+                    </div>
+
+                    <div class="p2-qblock">
+                        <div class="p2-qtitle">Question 2a & 2b</div>
+                        <p class="p2-qtext"><strong>2a.</strong> Decreasing overall resistance (R) of the circuit loop does what to the strength of the produced magnetic field?</p>
+                        <div class="p2-radio-group">
+                            <label><input type="radio" name="p2_q2a" value="stronger" onchange="saveP2Radio('p2_q2a', 'stronger')"> The produced magnetic field becomes stronger.</label>
+                            <label><input type="radio" name="p2_q2a" value="weaker" onchange="saveP2Radio('p2_q2a', 'weaker')"> The produced magnetic field becomes weaker.</label>
+                            <label><input type="radio" name="p2_q2a" value="unchanged" onchange="saveP2Radio('p2_q2a', 'unchanged')"> The produced magnetic field remains unchanged.</label>
+                        </div>
+                        <p class="p2-qtext" style="margin-top:10px;"><strong>2b.</strong> Justify your answer mathematically or conceptually using Ohm's Law (V = IR).</p>
+                        <textarea id="p2_q2b" rows="3" placeholder="Connect resistance drop to current change and field boosts..." oninput="saveP2Data('p2_q2b')"></textarea>
+                    </div>
+
+                    <div class="p2-qblock">
+                        <div class="p2-qtitle">Question 3</div>
+                        <p class="p2-qtext">Draw a detailed vector map showing magnetic field loops generated around your wrapped coil lines during steady-state DC power coupling.</p>
+                        <div id="p2_q3_sketch_container"></div>
+                    </div>
+
+                    <div class="p2-qblock">
+                        <div class="p2-qtitle">Question 4</div>
+                        <p class="p2-qtext">At the microscopic layer, explain how changing magnetic flux forces valence electrons inside copper lines to execute work and generate an active potential difference.</p>
+                        <textarea id="p2_q4" rows="3" placeholder="Detail microscopic interaction lines connecting shifting field forces directly to charge drift velocities..." oninput="saveP2Data('p2_q4')"></textarea>
+                    </div>
+
+                    <div class="p2-qblock">
+                        <div class="p2-qtitle">Question 5a & 5b</div>
+                        <p class="p2-qtext"><strong>5a.</strong> Why does increasing the speed at which a magnet passes through a coil increase the magnitude of the induced EMF?</p>
+                        <textarea id="p2_q5a" rows="3" placeholder="Incorporate Faraday's law of induction into your explanation..." oninput="saveP2Data('p2_q5a')"></textarea>
+                        <p class="p2-qtext" style="margin-top:10px;"><strong>5b.</strong> Contrast this effect against your multimeter findings at lower entry velocities.</p>
+                        <textarea id="p2_q5b" rows="3" placeholder="Describe display sampling limitations or visual observation lag trends..." oninput="saveP2Data('p2_q5b')"></textarea>
+                    </div>
+
+                    <div class="p2-qblock">
+                        <div class="p2-qtitle">Question 6</div>
+                        <p class="p2-qtext">State Lenz's Law and explain how it directly demonstrates the principle of Conservation of Energy within closed electromagnetic frameworks.</p>
+                        <textarea id="p2_q6" rows="3" placeholder="Describe back-EMF opposing magnetic fields and mechanical work inputs required..." oninput="saveP2Data('p2_q6')"></textarea>
+                    </div>
+
+                    <div class="p2-qblock">
+                        <div class="p2-qtitle">Question 7</div>
+                        <p class="p2-qtext">Provide a clear vector sketch mapping flux profiles when a neodymium magnet stack is held completely motionless directly inside the induction cylinder.</p>
+                        <div id="p2_q7_sketch_container"></div>
+                    </div>
+
+                    <div class="p2-qblock">
+                        <div class="p2-qtitle">Question 8a & 8b</div>
+                        <p class="p2-qtext"><strong>8a.</strong> A moving-coil microphone uses a diaphragm connected to a coil near a magnet. Propose one modification to the microphone design to increase the size of the signal sent to a recording device.</p>
+                        <input type="text" id="p2_q8a" placeholder="e.g., Increase total internal wire wrap configurations..." oninput="saveP2Data('p2_q8a')">
+                        <p class="p2-qtext" style="margin-top:10px;"><strong>8b.</strong> Explain the physical relationship between your chosen design parameter change and the resulting output voltage line spikes.</p>
+                        <textarea id="p2_q8b" rows="3" placeholder="Relate structural flux cuts to mathematical output adjustments..." oninput="saveP2Data('p2_q8b')"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
