@@ -28,7 +28,8 @@ def proxy_shortener():
         encoded_url = urllib.parse.quote(long_url)
         
         # --- SWAPPED TO TINYURL TO HANDLE MASSIVE DATA PAYLOADS ---
-        api_url = f"https://tinyurl.com/api-create.php?url={encoded_url}"
+        #api_url = f"https://tinyurl.com/api-create.php?url={encoded_url}"
+        api_url = f"https://api.tinyurl.com/create?url={encoded_url}"
         
         # 2. Package request with a clean browser User-Agent
         req = urllib.request.Request(
