@@ -29,8 +29,10 @@ def proxy_shortener():
         
         # --- SWAPPED TO TINYURL TO HANDLE MASSIVE DATA PAYLOADS ---
         #api_url = f"https://tinyurl.com/api-create.php?url={encoded_url}"
-        api_url = f"https://tinyurl.com/api-create.php?source=api&url={encoded_url}"
-        
+        #api_url = f"https://tinyurl.com/api-create.php?source=api&url={encoded_url}"
+        # --- SWAPPED TO DA.GD FOR INSTANT DIRECT REDIRECTS ---
+        api_url = f"https://da.gd/s?url={encoded_url}"
+
         # 2. Package request with a clean browser User-Agent
         req = urllib.request.Request(
             api_url, 
