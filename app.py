@@ -35,7 +35,7 @@ def proxy_shortener():
         )
         
         # 3. Talk to the server
-        with urllib.request.urlopen(req, timeout=5) as response:
+        with urllib.request.urlopen(req, timeout=10) as response:
             short_url = response.read().decode('utf-8').strip()
         
         # 4. SAFETY CHECK: If the service returned an error string, treat it as a failure
