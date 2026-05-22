@@ -465,25 +465,25 @@
                 const finalGeneratedUrl = currentCleanUrl + "?resume=" + compressedTokenBase64;
                 
                 // --- NEW URL SHORTENER INTEGRATION ---
-                // Send the long URL to a URL shortener API
-                fetch(`https://is.gd/create.php?format=simple&url=${encodeURIComponent(finalGeneratedUrl)}`)
-                    .then(response => {
-                        if (!response.ok) throw new Error("Shortener API failed");
-                        return response.text();
-                    })
-                    .then(shortUrl => {
-                        // Update the UI with the clean, short link (e.g., https://is.gd/XyZ123)
-                        document.getElementById('resumeUrlOutput').innerText = shortUrl;
-                        
-                        // Copy the SHORT link to the clipboard
-                        executeClipboardCopy(shortUrl);
-                    })
-                    .catch(err => {
-                        console.warn("Shortener failed, falling back to original long URL:", err);
-                        // Fallback: If the shortener ever goes down, don't break the app, just use the long URL
-                        document.getElementById('resumeUrlOutput').innerText = finalGeneratedUrl;
-                        executeClipboardCopy(finalGeneratedUrl);
-                    });
+                // Send the massive URL to YOUR OWN Flask server instead of is.gd directly
+                fetch('/api/shorten', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: finalGeneratedUrl })
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error("Server shortener failed");
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        // Update the UI with the clean, short link returned by Flask
+                        document.getElementById('resumeUrlOutput').innerText = data.shortUrl;
+                        executeClipboardCopy(data.shortUrl);
+                    } else {
+                        throw new Error(data.error);
+                    }
+                })
     
             } catch (err) {
                 console.error("Link generation anomaly: ", err);
