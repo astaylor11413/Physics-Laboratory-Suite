@@ -26,27 +26,28 @@ def proxy_shortener():
             
         # 1. Safely encode parameters
         encoded_url = urllib.parse.quote(long_url)
-        api_url = f"https://is.gd/create.php?format=simple&url={encoded_url}"
         
-        # 2. Package request with a clean Chrome browser User-Agent
+        # --- SWAPPED TO TINYURL TO HANDLE MASSIVE DATA PAYLOADS ---
+        api_url = f"https://tinyurl.com/api-create.php?url={encoded_url}"
+        
+        # 2. Package request with a clean browser User-Agent
         req = urllib.request.Request(
             api_url, 
             headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
         )
         
-        # 3. Talk to the server
-        with urllib.request.urlopen(req, timeout=10) as response:
+        # 3. Talk to TinyURL server-to-server
+        with urllib.request.urlopen(req, timeout=7) as response:
             short_url = response.read().decode('utf-8').strip()
         
-        # 4. SAFETY CHECK: If the service returned an error string, treat it as a failure
-        if "Error" in short_url or "failed" in short_url:
-            raise Exception(f"External API returned an anomaly: {short_url}")
+        # 4. Safety Check
+        if "Error" in short_url or not short_url.startswith("http"):
+            raise Exception(f"External API failed: {short_url}")
             
         return jsonify({"success": True, "shortUrl": short_url})
         
     except Exception as e:
         print(f"!!! SHORTENER PROXY EXCEPTION: {e}")
-        # Explicitly tell JS that this was a failure!
         return jsonify({"success": False, "error": str(e)}), 500
 
 if __name__ == '__main__':
