@@ -435,7 +435,7 @@
                     style: { left: el.style.left, top: el.style.top }
                 });
             });
-
+        
             const tracksLayoutState = {
                 pvcVisible: document.getElementById('pvcTrack').style.display === 'block',
                 pvcSanded: document.getElementById('pvcTrack').classList.contains('sanded'),
@@ -446,7 +446,7 @@
                 leadsStripped: document.getElementById('vLeadL').classList.contains('stripped'),
                 shieldVisible: document.getElementById('vShield').style.display === 'block'
             };
-
+        
             const statePayload = {
                 chunk: currentChunk,
                 answers: studentAnswers,
@@ -455,7 +455,7 @@
                 canvasAssets: activeElementsMetadata,
                 tracksState: tracksLayoutState
             };
-
+        
             try {
                 const plainTextJson = JSON.stringify(statePayload);
                 const safeStringUrlComponent = encodeURIComponent(plainTextJson);
@@ -464,8 +464,7 @@
                 let currentCleanUrl = window.location.href.split('?')[0]; 
                 const finalGeneratedUrl = currentCleanUrl + "?resume=" + compressedTokenBase64;
                 
-                // --- NEW URL SHORTENER INTEGRATION ---
-                // Send the massive URL to YOUR OWN Flask server instead of is.gd directly
+                // --- FIXED URL SHORTENER INTEGRATION ---
                 fetch('/api/shorten', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -484,23 +483,38 @@
                         throw new Error(data.error);
                     }
                 })
-    
+                .catch(err => {
+                    // --- CRITICAL FIXED FALLBACK ---
+                    // If the server/API errors out, gracefully fall back to the long URL so the lab doesn't break!
+                    console.warn("Shortener failed, falling back to original long URL:", err);
+                    document.getElementById('resumeUrlOutput').innerText = finalGeneratedUrl;
+                    executeClipboardCopy(finalGeneratedUrl);
+                });
+        
             } catch (err) {
                 console.error("Link generation anomaly: ", err);
                 alert("Failed to build compressed backup data. Check that text fields do not contain illegal system symbols.");
             }
-
         }
 
         function executeClipboardCopy(textToCopy) {
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(textToCopy).then(() => {
-                    alert("SUCCESS: Your work snapshot has been saved! The short resume URL has been copied directly to your clipboard.");
+                    alert("SUCCESS: Your work snapshot has been saved! The resume URL has been copied directly to your clipboard.");
                 }).catch(() => {
-                    fallbackCopyExecute(textToCopy);
+                    // If the browser clipboard API is blocked by security, run your original fallback strategy
+                    if (typeof fallbackCopyExecute === "function") {
+                        fallbackCopyExecute(textToCopy);
+                    } else {
+                        alert("Saved! Copy your link from the screen text box.");
+                    }
                 });
             } else {
-                fallbackCopyExecute(textToCopy);
+                if (typeof fallbackCopyExecute === "function") {
+                    fallbackCopyExecute(textToCopy);
+                } else {
+                    alert("Saved! Copy your link from the screen text box.");
+                }
             }
         }
 
