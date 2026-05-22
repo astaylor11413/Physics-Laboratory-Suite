@@ -464,22 +464,32 @@
                 let currentCleanUrl = window.location.href.split('?')[0]; 
                 const finalGeneratedUrl = currentCleanUrl + "?resume=" + compressedTokenBase64;
                 
-                document.getElementById('resumeUrlOutput').innerText = finalGeneratedUrl;
-                
-                // Modern clipboard API integration with a secure, standard textarea string fallback strategy
-                if (navigator.clipboard && navigator.clipboard.writeText) {
-                    navigator.clipboard.writeText(finalGeneratedUrl).then(() => {
-                        alert("SUCCESS: Your work snapshot has been saved! The functional resume URL has been copied directly to your clipboard.");
-                    }).catch(() => {
-                        fallbackCopyExecute(finalGeneratedUrl);
+                // --- NEW URL SHORTENER INTEGRATION ---
+                // Send the long URL to a URL shortener API
+                fetch(`https://is.gd/create.php?format=simple&url=${encodeURIComponent(finalGeneratedUrl)}`)
+                    .then(response => {
+                        if (!response.ok) throw new Error("Shortener API failed");
+                        return response.text();
+                    })
+                    .then(shortUrl => {
+                        // Update the UI with the clean, short link (e.g., https://is.gd/XyZ123)
+                        document.getElementById('resumeUrlOutput').innerText = shortUrl;
+                        
+                        // Copy the SHORT link to the clipboard
+                        executeClipboardCopy(shortUrl);
+                    })
+                    .catch(err => {
+                        console.warn("Shortener failed, falling back to original long URL:", err);
+                        // Fallback: If the shortener ever goes down, don't break the app, just use the long URL
+                        document.getElementById('resumeUrlOutput').innerText = finalGeneratedUrl;
+                        executeClipboardCopy(finalGeneratedUrl);
                     });
-                } else {
-                    fallbackCopyExecute(finalGeneratedUrl);
-                }
+    
             } catch (err) {
                 console.error("Link generation anomaly: ", err);
                 alert("Failed to build compressed backup data. Check that text fields do not contain illegal system symbols.");
             }
+
         }
 
         function fallbackCopyExecute(textUrl) {
