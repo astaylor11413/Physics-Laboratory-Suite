@@ -15,24 +15,30 @@ def home():
 @app.route('/api/shorten', methods=['POST'])
 def proxy_shortener():
     try:
-        # Get the massive URL sent by your JavaScript
         data = request.json
         long_url = data.get('url')
         
-        # Safely encode the URL for the is.gd API query string
+        # 1. Safely encode the parameters
         encoded_url = urllib.parse.quote(long_url)
         api_url = f"https://is.gd/create.php?format=simple&url={encoded_url}"
         
-        # Make a secure server-to-server request to is.gd (Bypasses CORS completely!)
-        with urllib.request.urlopen(api_url, timeout=5) as response:
+        # 2. Create a Request object and add a real browser User-Agent header
+        req = urllib.request.Request(
+            api_url, 
+            headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
+        )
+        
+        # 3. Execute the spoofed request
+        with urllib.request.urlopen(req, timeout=5) as response:
             short_url = response.read().decode('utf-8')
             
         return jsonify({"success": True, "shortUrl": short_url})
         
     except Exception as e:
-        print(f"Backend shortener error: {e}")
+        # This print statement will stream the exact error straight to your terminal or Render logs
+        print(f"!!! CRITICAL BACKEND ERROR: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
-        
+
 
 if __name__ == '__main__':
     # Runs the app locally on port 5000
