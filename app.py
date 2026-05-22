@@ -1,10 +1,13 @@
 from flask import Flask, render_template
+from flask_cors import CORS
 import urllib.request
 import urllib.parse
 import os
 import json
 
 app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "*", "allow_headers": "*", "methods": ["GET", "POST", "OPTIONS"]}})
+
 
 # Define the route for your home page
 @app.route('/')
