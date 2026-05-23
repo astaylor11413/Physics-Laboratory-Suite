@@ -30,9 +30,9 @@ def save_state_to_db(state_data):
 
     doc_ref = db.collection("labStates").document(share_id)
     doc_ref.set({
-        "studentName": student_name,          # 🌟 Elevated to the top level for quick reading!
         "stateData": state_data,
-        "createdAt": firestore.SERVER_TIMESTAMP 
+        "createdAt": firestore.SERVER_TIMESTAMP,
+        "studentName": student_name,
     })
     
     return share_id
