@@ -1,4 +1,6 @@
 flask
+gunicorn
 firebase-admin
 python-dotenv
-gunicorn
+gspread
+oauth2client
