@@ -1,13 +1,22 @@
+import os
 import secrets
 import firebase_admin
 from firebase_admin import credentials, firestore
+from dotenv import load_dotenv
 
-# 1. Initialize Firebase Admin utilizing your service account key file
-# Replace 'firebase-credentials.json' with the actual filename you downloaded
-cred = credentials.Certificate("firebase-credentials.json")
+# 1. Load the variables from the .env file into Python's environment
+load_dotenv()
+
+# 2. Grab the path string safely from the environment
+cred_path = os.getenv("FIREBASE_KEY_PATH")
+
+if not cred_path:
+    raise ValueError("CRITICAL: FIREBASE_KEY_PATH is missing from your environment configuration!")
+
+# 3. Initialize Firebase using the hidden path variable
+cred = credentials.Certificate(cred_path)
 firebase_admin.initialize_app(cred)
 
-# 2. Spin up the Firestore Client
 db = firestore.client()
 
 def save_state_to_db(state_data):
