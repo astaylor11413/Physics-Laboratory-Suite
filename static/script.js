@@ -1,13 +1,20 @@
-  let deployedHardwareTokens = {};
+
+        let deployedHardwareTokens = {};
         let switchClosedState = false;
         let rigConstructionLevel = 0;
         let validatedTeacherSignoffs = { 1: false, 2: false, 3: false, 4: false };
 
         const STORAGE_KEY = 'InductionJunction_Workspace_State';
 
-        window.addEventListener('DOMContentLoaded', () => {
-            attachSaveListeners();
+        window.addEventListener('DOMContentLoaded', async () => {
+            // 1. Force the app to wait until the URL check (and network fetch) is 100% complete
+            await checkAndLoadUrlState();
+            
+            // 2. Now that localStorage is guaranteed to have the cloud state data, load it safely
             loadProgressFromStorage();
+            
+            // 3. Attach your DOM input and change event handlers
+            attachSaveListeners();
         });
 
         function switchMasterView(viewId) {
@@ -390,7 +397,7 @@
                 };
             };
         }
-
+/**Saving and Loading Progress Section */
         function attachSaveListeners() {
             document.querySelectorAll('.autosave-input').forEach(elem => {
                 elem.addEventListener('input', () => saveProgressToStorage());
@@ -500,6 +507,94 @@
             }
         }
 
+        async function checkAndLoadUrlState() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const shareId = urlParams.get('id');
+        
+            if (shareId) {
+                try {
+                    const response = await fetch(`/api/load-state/${shareId}`);
+                    const data = await response.json();
+        
+                    if (data.state) {
+                        // Safely commit it to local storage
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify(data.state));
+                        
+                        // Clean up the URL bar
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                        console.log("Lab state successfully cached from cloud backup!");
+                    }
+                } catch (error) {
+                    console.error("Error pulling physics state from Flask:", error);
+                }
+            }
+        }     
+
+        async function generateShareLink() {
+            // 1. Grab the raw stringified JSON directly from localStorage
+            const currentStateString = localStorage.getItem(STORAGE_KEY); 
+        
+            if (!currentStateString) {
+                alert("No lab progress found to share! Make sure you've started the lab.");
+                return;
+            }
+        
+            // 2. Parse it back into a clean JS Object so we can send it nicely to Flask
+            const payloadObject = JSON.parse(currentStateString);
+        
+            // 3. Send the object directly to your Flask backend
+            const response = await fetch('/api/save-state', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ state: payloadObject }) // Flask receives the whole dictionary
+            });
+        
+            const data = await response.json();
+            
+            // 4. Generate the URL using the tiny ID from Flask
+            const shareUrl = new URL(window.location.origin);
+            shareUrl.searchParams.set('id', data.shareId);
+            executeClipboardCopy(shareUrl.href);
+            return shareUrl.href;
+        }
+
+        function executeClipboardCopy(textToCopy) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    alert("SUCCESS: Your work snapshot has been saved! The resume URL has been copied directly to your clipboard.");
+                }).catch(() => {
+                    // If the browser clipboard API is blocked by security, run your original fallback strategy
+                    if (typeof fallbackCopyExecute === "function") {
+                        fallbackCopyExecute(textToCopy);
+                    } else {
+                        alert("Saved! Copy your link from the screen text box.");
+                    }
+                });
+            } else {
+                if (typeof fallbackCopyExecute === "function") {
+                    fallbackCopyExecute(textToCopy);
+                } else {
+                    alert("Saved! Copy your link from the screen text box.");
+                }
+            }
+        }
+
+
+        function fallbackCopyExecute(textUrl) {
+            const fallbackTextNode = document.createElement("textarea");
+            fallbackTextNode.value = textUrl;
+            fallbackTextNode.style.position = 'fixed';
+            document.body.appendChild(fallbackTextNode);
+            fallbackTextNode.select();
+            try {
+                document.execCommand("copy");
+                alert("SUCCESS: Work snapshot link compiled and copied to clipboard!");
+            } catch (err) {
+                alert("Link compiled in the address bar display container box above. Please manually triple-click it and choose Copy.");
+            }
+            document.body.removeChild(fallbackTextNode);
+        }
+
         function performMasterReset() {
             if (!confirm("Are you sure you want to permanently clear your lab progress and answers?")) return;
             
@@ -551,3 +646,4 @@
             document.title = originalTitle;
         }
 
+        
