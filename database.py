@@ -20,18 +20,19 @@ firebase_admin.initialize_app(cred)
 db = firestore.client()
 
 def save_state_to_db(state_data):
-    """
-    Receives the lab state dictionary, generates a short 6-character 
-    hex token, and commits it securely to Firestore.
-    """
-    # Generates a random, secure 6-character hex token (e.g., 'f3b8c2')
+    # Generates your random short code
     share_id = secrets.token_hex(3) 
     
-    # Target the 'labStates' collection using the share_id as the Document ID
+    # Safely extract the student's name from the payload (default to 'Anonymous' if empty)
+    student_name = state_data.get('studentName', 'Anonymous Student').strip()
+    if not student_name:
+        student_name = 'Anonymous Student'
+
     doc_ref = db.collection("labStates").document(share_id)
     doc_ref.set({
+        "studentName": student_name,          # 🌟 Elevated to the top level for quick reading!
         "stateData": state_data,
-        "createdAt": firestore.SERVER_TIMESTAMP # Tracks when the student saved it
+        "createdAt": firestore.SERVER_TIMESTAMP 
     })
     
     return share_id

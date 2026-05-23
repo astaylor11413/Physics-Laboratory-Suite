@@ -539,23 +539,36 @@
                 return;
             }
         
-            // 2. Parse it back into a clean JS Object so we can send it nicely to Flask
-            const payloadObject = JSON.parse(currentStateString);
+            try {
+                // 2. Parse it back into a clean JS Object
+                const payloadObject = JSON.parse(currentStateString);
         
-            // 3. Send the object directly to your Flask backend
-            const response = await fetch('/api/save-state', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ state: payloadObject }) // Flask receives the whole dictionary
-            });
+                // 3. Send the object directly to your Flask backend
+                const response = await fetch('/api/save-state', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ state: payloadObject }) 
+                });
         
-            const data = await response.json();
-            
-            // 4. Generate the URL using the tiny ID from Flask
-            const shareUrl = new URL(window.location.origin);
-            shareUrl.searchParams.set('id', data.shareId);
-            executeClipboardCopy(shareUrl.href);
-            return shareUrl.href;
+                const data = await response.json();
+                
+                //Ensure the shareId actually exists and isn't undefined/empty
+                if (!response.ok || !data.shareId) {
+                    throw new Error(data.error || "Failed to retrieve a valid Share ID from the server.");
+                }
+        
+                // 4. Generate the clean URL using the tiny ID from Flask
+                const shareUrl = new URL(window.location.origin);
+                shareUrl.searchParams.set('id', data.shareId);
+                
+                // Copy to clipboard safely
+                executeClipboardCopy(shareUrl.href);
+                return shareUrl.href;
+        
+            } catch (err) {
+                console.error("Link generation failure:", err);
+                alert(`Could not generate share link: ${err.message}`);
+            }
         }
 
         function executeClipboardCopy(textToCopy) {
