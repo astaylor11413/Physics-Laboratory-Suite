@@ -3,156 +3,436 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NYS Physics Lab: Electromagnetic Induction Suite</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <script src="{{ url_for('static', filename='script.js') }}" defer></script>
+    <title>NYSED Physics Investigation: Induction Junction Comprehensive Portal</title>
 </head>
 <body>
 
     <header>
-        <h1>NYS Physical Setting: Physics Laboratory Suite</h1>
-        <p class="subtitle">Electromagnetic Induction Laboratory Protocol Ecosystem</p>
+        <div>
+            <h1>Induction Junction Complete NYSED Lab Simulator</h1>
+            <p>Integrated Framework: Student Answer Packet 1, Core Visual Workbench, and Analytical Assessment Packet 2</p>
+        </div>
+        <div>
+            <input type="text" id="packetNameInput" class="meta-input" placeholder="Enter Student Name (Packet 1/2)" oninput="handleNameSynchronization()">
+            <div id="saveStatus" class="save-indicator">All work saved locally</div>
+        </div>
     </header>
 
-    <div class="system-utility-bar">
-        <div class="link-container">
-            <button class="btn-action btn-p" style="padding: 8px 14px; flex: initial;" onclick="generateResumeStateLink()">Generate Work Resume Link</button>
-            <div class="url-box" id="resumeUrlOutput">No snapshot compiled yet. Click button to construct live backup link...</div>
+    <div class="master-navigation">
+        <div class="nav-tab-group">
+            <button class="nav-tab active-tab" id="masterNavBtn-1" onclick="switchMasterView(1)">Student Answer Packet 1 (Investigation Design)</button>
+            <button class="nav-tab" id="masterNavBtn-2" onclick="switchMasterView(2)">Student Answer Packet 2 (Analysis &amp; Evaluation)</button>
         </div>
-        <button class="btn-action" style="background: #ea580c; color: white;" onclick="exportCompletePacketsToPDF()">Export Completed Packets to PDF</button>
+        <button class="pdf-export-trigger" onclick="triggerSystemPdfExport()">
+            🖨️ Export Portfolio to PDF
+        </button>
     </div>
 
-    <div class="nav-tabs">
-        <button class="tab-btn active" id="tabBtnP1" onclick="switchMainTab('P1')">Student Answer Packet 1 (Lab Run)</button>
-        <button class="tab-btn" id="tabBtnP2" onclick="switchMainTab('P2')">Student Answer Packet 2 (Independent Analysis)</button>
-    </div>
-
-    <div class="workspace-container">
-        <div class="left-simulation-block">
-            <div class="inventory-panel" id="p1Inventory">
-                <div class="panel-title">Equipment Manifest</div>
-                <div class="inv-item" draggable="true" id="inv_pvc" ondragstart="spawnAsset(event, 'pvc')">2-Foot PVC Pipe</div>
-                <div class="inv-item" draggable="true" id="inv_sand" ondragstart="spawnAsset(event, 'sand')">Sandpaper Block</div>
-                <div class="inv-item" draggable="true" id="inv_spacer" ondragstart="spawnAsset(event, 'spacer')">3"x5" Index Card Spacer</div>
-                <div class="inv-item" draggable="true" id="inv_chassis" ondragstart="spawnAsset(event, 'chassis')">5"x8" Index Card Chassis</div>
-                <div class="inv-item" draggable="true" id="inv_tape" ondragstart="spawnAsset(event, 'tape')">Electrical Tape</div>
-                <div class="inv-item" draggable="true" id="inv_ptape" ondragstart="spawnAsset(event, 'ptape')">Packaging Tape</div>
-                <div class="inv-item" draggable="true" id="inv_wire300" ondragstart="spawnAsset(event, 'wire300')">28 AWG Wire (300-Turn)</div>
-                <div class="inv-item" draggable="true" id="inv_wire400" ondragstart="spawnAsset(event, 'wire400')">28 AWG Wire (400-Turn)</div>
-                <div class="inv-item" draggable="true" id="inv_compass" ondragstart="spawnAsset(event, 'compass')">Magnetic Compass</div>
-                <div class="inv-item" draggable="true" id="inv_battery" ondragstart="spawnAsset(event, 'battery')">2x D-Cell Battery (3.0V)</div>
-                <div class="inv-item" draggable="true" id="inv_dmm" ondragstart="spawnAsset(event, 'dmm')">Digital Multimeter</div>
-                <div class="inv-item" draggable="true" id="inv_ledred" ondragstart="spawnAsset(event, 'ledred')">Red LED Indicator</div>
-                <div class="inv-item" draggable="true" id="inv_ledblue" ondragstart="spawnAsset(event, 'ledblue')">Blue LED Indicator</div>
-                <div class="inv-item" draggable="true" id="inv_magnet" ondragstart="spawnAsset(event, 'magnet')">Neodymium Magnets</div>
-                <div class="inv-item" draggable="true" id="inv_nail" ondragstart="spawnAsset(event, 'nail')">Ferromagnetic Core Nail</div>
+    <div class="workspace-grid">
+        
+        <div class="panel">
+            <h3>Equipment Bin Toolkit</h3>
+            
+            <div class="materials-list-box">
+                <strong>Provided Materials Pool:</strong>
+                <ul>
+                    <li>2-foot PVC pipe (1/2-inch inner diameter)</li>
+                    <li>28 AWG magnet wire, enameled</li>
+                    <li>Electrical tape</li>
+                    <li>3" x 5" Index card</li>
+                    <li>5" x 8" Index cards (one per induction tube)</li>
+                    <li>Sandpaper</li>
+                    <li>Scissors</li>
+                    <li>Packaging tape</li>
+                    <li>Drill (optional)</li>
+                    <li>Pen or pencil</li>
+                    <li>Metric ruler or meter stick</li>
+                </ul>
             </div>
+            
+            <p style="font-size: 11px; color:#718096; margin-top:-5px; margin-bottom: 12px;">Deploy additional circuit testing tokens to the active testing workspace floor below:</p>
+            
+            <div style="overflow-y: auto; flex: 1; padding-right: 2px;">
+                <div class="inventory-item" onclick="allocateAsset('battery')"><span>1.5V D-Cell Battery Stack</span><button>+</button></div>
+                <div class="inventory-item" onclick="allocateAsset('switch')"><span>Knife Switch Interrupter</span><button>+</button></div>
+                <div class="inventory-item" onclick="allocateAsset('nail')"><span>Soft Iron Ferromagnetic Core</span><button>+</button></div>
+                <div class="inventory-item" onclick="allocateAsset('compass')"><span>Magnetic Compass Dial</span><button>+</button></div>
+                <div class="inventory-item" onclick="allocateAsset('magnet')"><span>Neodymium Magnet Core</span><button>+</button></div>
+                <div class="inventory-item" onclick="allocateAsset('led')"><span>Bi-Directional LED Diode</span><button>+</button></div>
+                <div class="inventory-item" onclick="allocateAsset('multimeter')"><span>Digital Probe Multimeter</span><button>+</button></div>
+            </div>
+            
+            <button class="btn-reset" onclick="performMasterReset()" style="background:#e53e3e; color:white; border:none; padding:8px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:11px; margin-top:10px;">Reset Workspace Configuration</button>
+        </div>
 
-            <div class="sandbox-area">
-                <div class="workspace-canvas" id="canvasDropzone" ondragover="allowDrop(event)" ondrop="handleDrop(event)">
-                    <div class="hud-overlay" id="canvasHud">Objective: Awaiting Step Alignment...</div>
-                    
-                    <div id="pvcTrack" class="drag-element pvc-base" style="display:none;" onmousedown="initDrag(event, 'pvcTrack')">
-                        <div id="vSpacer" class="drag-element spacer-sleeve" style="display:none; left: 110px; top:-4px;"></div>
-                        <div id="vChassis" class="drag-element chassis-sleeve" style="display:none; left:95px; top:-6px;">
-                            <div id="vTapeL" class="tape-mod-left"></div>
-                            <div id="vTapeR" class="tape-mod-right"></div>
-                            <div id="vCoil" class="coil-mod"></div>
-                            <div id="vLeadL" class="lead-line lead-L"></div>
-                            <div id="vLeadR" class="lead-line lead-R"></div>
-                            <div id="vShield" class="shield-mod"></div>
+        <div class="panel dark-workspace-panel">
+            <div class="dark-sub-tab-bar">
+                <button class="sub-btn active-sub" id="subBtnBench" onclick="switchSubTab('bench')">Active Testing Workbench</button>
+                <button class="sub-btn" id="subBtnRig" onclick="switchSubTab('rig')">Rig Guide Assembly Track</button>
+            </div>
+            
+            <div id="workbenchPanelContainer" style="display: block; flex: 1; position: relative;">
+                <div id="workbenchCanvas">
+                    <div class="canvas-header-bar" id="telemetryStatusBar">
+                        Terminal Status: Use the Rig Guide Track to construct your tube loop using provided equipment bin assets.
+                    </div>
+
+                    <div id="structuralVisualizer">
+                        <div style="position: absolute; top: -18px; font-size: 9px; color: #94a3b8; font-family: monospace; text-align: center; width: 100%; font-weight: bold;" id="visualRigStatusLabel">NO TUBE INSTALLED</div>
+                        <div class="layer-pvc" id="pvcLayerGraphic">
+                            <div class="layer-spacer" id="spacerLayerGraphic"></div>
+                            <div class="layer-frame" id="frameLayerGraphic"></div>
+                            <div class="layer-coils" id="coilLayerGraphic"></div>
+                            <div class="layer-tape" id="tapeLayerGraphic"></div>
                         </div>
                     </div>
                 </div>
-                <div class="remove-hint">💡 Tip: Double-click any equipment item on the canvas to remove it from the workspace.</div>
-                <div id="statusAlert" style="display:none;"></div>
+            </div>
+
+            <div id="rigGuidePanelContainer" style="display: none; overflow-y: auto; flex: 1;">
+                <p style="font-size:11.5px; color:#cbd5e1; margin-bottom: 10px;">Click each phase sequence to construct your induction spool setup using the provided equipment bin tools and assets.</p>
+                
+                <div class="inventory-item" style="background:#1e293b; border: 1px solid #334155; border-left:4px solid #64748b; flex-direction:column; align-items:flex-start; padding:10px; color: #f8fafc;" id="visualStepBlock-1" onclick="executeStepAssembly(1)">
+                    <strong style="font-size:12px; color:#38bdf8;">Phase 1: Tube Core Cut &amp; Metric Finish</strong>
+                    <span style="font-size:11px; color:#94a3b8; margin-top:2px;">Measure and mark the 2-foot PVC pipe (1/2-inch inner diameter) using your pen or pencil and metric ruler or meter stick. Clean raw edges using sandpaper.</span>
+                </div>
+                <div class="inventory-item" style="background:#1e293b; border: 1px solid #334155; border-left:4px solid #64748b; flex-direction:column; align-items:flex-start; padding:10px; margin-top:6px; cursor:not-allowed; opacity:0.4; color: #f8fafc;" id="visualStepBlock-2" onclick="executeStepAssembly(2)">
+                    <strong style="font-size:12px; color:#64748b;">Phase 2: Wrap Clearance Sleeve Component</strong>
+                    <span style="font-size:11px; color:#64748b; margin-top:2px;">Secure the 3" x 5" Index card firmly around the structural PVC tube core, securing structural seams with strips of electrical tape.</span>
+                </div>
+                <div class="inventory-item" style="background:#1e293b; border: 1px solid #334155; border-left:4px solid #64748b; flex-direction:column; align-items:flex-start; padding:10px; margin-top:6px; cursor:not-allowed; opacity:0.4; color: #f8fafc;" id="visualStepBlock-3" onclick="executeStepAssembly(3)">
+                    <strong style="font-size:12px; color:#64748b;">Phase 3: Size and Fit Exterior Spool Guide Walls</strong>
+                    <span style="font-size:11px; color:#64748b; margin-top:2px;">Use scissors to trim the 5" x 8" Index card to form a guided exterior frame spool structure.</span>
+                </div>
+                <div class="inventory-item" style="background:#1e293b; border: 1px solid #334155; border-left:4px solid #64748b; flex-direction:column; align-items:flex-start; padding:10px; margin-top:6px; cursor:not-allowed; opacity:0.4; color: #f8fafc;" id="visualStepBlock-4" onclick="executeStepAssembly(4)">
+                    <strong style="font-size:12px; color:#64748b;">Phase 4: Helix Wire Spool Winding</strong>
+                    <span style="font-size:11px; color:#64748b; margin-top:2px;">Wind tight turns of the 28 AWG enameled magnet wire around the card spool. Use sandpaper to sand down the terminal endpoints to clear the insulating enamel.</span>
+                </div>
+                <div class="inventory-item" style="background:#1e293b; border: 1px solid #334155; border-left:4px solid #64748b; flex-direction:column; align-items:flex-start; padding:10px; margin-top:6px; cursor:not-allowed; opacity:0.4; color: #f8fafc;" id="visualStepBlock-5" onclick="executeStepAssembly(5)">
+                    <strong style="font-size:12px; color:#64748b;">Phase 5: Secure Final Shell Jacket Seal</strong>
+                    <span style="font-size:11px; color:#64748b; margin-top:2px;">Wrap your coil configuration with clear packaging tape. (Optional: Use a drill if anchor terminal mount placements are preferred).</span>
+                </div>
             </div>
         </div>
 
-        <div class="right-packet-block">
-            <div class="tab-content active" id="tabContentP1">
-                <div class="guide-panel">
-                    <div>
-                        <div class="task-card">
-                            <div class="task-step-number" id="stepNumberLabel">Step 1 of 25</div>
-                            <div id="taskObjective">Loading structural guidelines...</div>
-                        </div>
-                        <div class="panel-title">NYS Form Field Repository</div>
-                        <div class="packet-box" id="packetBox">
-                            <div id="formContainer">Initialization sequence pending.</div>
-                        </div>
-                    </div>
-                    <div class="action-btns">
-                        <button class="btn-action btn-s" id="btnPrevStep" onclick="regressToPreviousStep()" disabled>← Previous Step</button>
-                        <button class="btn-action btn-p" id="btnNextStep" onclick="progressToNextStep()" disabled>Complete Action →</button>
-                    </div>
+        <div class="panel" style="border-left: 2px solid var(--primary-color);">
+            
+            <div class="packet-view-wrapper active-window" id="packetPanelSection-1">
+                <div class="sub-tab-bar" style="background: #cbd5e0;">
+                    <button class="sub-btn active-sub" id="p1TabBtn-1" onclick="navigateP1Section(1)">Part 1</button>
+                    <button class="sub-btn" id="p1TabBtn-2" onclick="navigateP1Section(2)">Part 2</button>
+                    <button class="sub-btn" id="p1TabBtn-3" onclick="navigateP1Section(3)">Part 3</button>
+                    <button class="sub-btn" id="p1TabBtn-4" onclick="navigateP1Section(4)/">Part 4</button>
                 </div>
-            </div>
 
-            <div class="tab-content" id="tabContentP2">
-                <div class="p2-layout">
-                    <div class="panel-title" style="font-size: 1.1em;">Packet 2: Post-Lab Independent Summative Review</div>
+                <div id="p1Block-1" style="display:block;">
+                    <div class="rubric-header-box">
+                        <strong>1. Write your name in Student Answer Packet 1 (Header field above).</strong><br><br>
+                        <strong>Criteria:</strong> Your investigation plan must include:<br>
+                        • evidence of a current;<br>
+                        • evidence of a magnetic field; and<br>
+                        • evidence for how a modification of the experimental setup affects the strength of a produced magnetic field.<br><br>
+                        <strong>Constraint:</strong> Limited to authorized assets provided in the equipment bin (2-foot PVC, 28 AWG wire, index cards, ruler, tapes, sandpaper).
+                    </div>
                     
-                    <div class="p2-qblock">
-                        <div class="p2-qtitle">Question 1</div>
-                        <p class="p2-qtext">In Part 2, your team modified the loop arrangement setup to change the output. Explain the structural physics mechanism showing how your design alteration affected the peak magnetic field produced.</p>
-                        <textarea id="p2_q1" rows="3" placeholder="Discuss changes in turns matrix, source voltage alterations, or introduction of interior core mediums..." oninput="saveP2Data('p2_q1')"></textarea>
+                    <div class="question-block">
+                        <label>2. Review the equipment bin materials provided (2-foot PVC pipe, 28 AWG wire, index cards, electrical/packaging tape, ruler, tools) and discuss how they could be used to address the criteria provided.</label>
+                        <textarea id="p1-q2" rows="2" class="autosave-input" placeholder="Discuss material utility here..."></textarea>
                     </div>
 
-                    <div class="p2-qblock">
-                        <div class="p2-qtitle">Question 2a & 2b</div>
-                        <p class="p2-qtext"><strong>2a.</strong> Decreasing overall resistance (R) of the circuit loop does what to the strength of the produced magnetic field?</p>
-                        <div class="p2-radio-group">
-                            <label><input type="radio" name="p2_q2a" value="stronger" onchange="saveP2Radio('p2_q2a', 'stronger')"> The produced magnetic field becomes stronger.</label>
-                            <label><input type="radio" name="p2_q2a" value="weaker" onchange="saveP2Radio('p2_q2a', 'weaker')"> The produced magnetic field becomes weaker.</label>
-                            <label><input type="radio" name="p2_q2a" value="unchanged" onchange="saveP2Radio('p2_q2a', 'unchanged')"> The produced magnetic field remains unchanged.</label>
+                    <div style="background: var(--primary-color); color: white; padding: 6px 10px; font-weight: bold; border-radius: 4px; font-size: 13px; margin-bottom: 12px;">
+                        Session 1: Part 1 - Plan and conduct an investigation to provide evidence that an electric current can produce a magnetic field.
+                    </div>
+
+                    <div class="question-block">
+                        <label>3. Identify an item from the list of materials that will provide evidence of an electric current and explain how it indicates the presence of a current.</label>
+                        <textarea id="p1-q3" rows="2" class="autosave-input" placeholder="Identify current item and explain its action..."></textarea>
+                    </div>
+
+                    <div class="question-block">
+                        <label>4. Identify an item from the list of materials that can provide evidence of a produced magnetic field and explain how it indicates the presence of a magnetic field.</label>
+                        <textarea id="p1-q4" rows="2" class="autosave-input" placeholder="Identify magnetic field item and explain its action..."></textarea>
+                    </div>
+
+                    <div class="question-block">
+                        <label>5. List all the materials that will be needed to complete this part.</label>
+                        <textarea id="p1-q5" rows="2" class="autosave-input" placeholder="List materials needed here..."></textarea>
+                    </div>
+
+                    <div class="question-block">
+                        <label>6. Develop a model to show your initial experimental setup. Label the model.</label>
+                        <div class="instruction-step">Use the "Toolkit" panel on the left to add tokens to your visual workspace canvas to represent your active circuit arrangement.</div>
+                        <textarea id="p1-q6" rows="2" class="autosave-input" placeholder="Describe or detail labels for your workspace arrangement model..."></textarea>
+                    </div>
+
+                    <div class="question-block">
+                        <label>7. Construct a step-by-step investigation plan to collect evidence of a current and a produced magnetic field.</label>
+                        <textarea id="p1-q7" rows="3" class="autosave-input" placeholder="Write out your structural numbered steps here..."></textarea>
+                    </div>
+
+                    <div style="background:#edf2f7; padding:10px; border-radius:6px; margin-bottom:12px; font-size:12px; border: 1px dashed var(--primary-color);">
+                        <strong>8. Present your investigation plan to the teacher for approval.</strong>
+                        <button style="width:100%; margin-top:6px; padding:6px; background:var(--primary-color); border:none; color:white; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="grantTeacherSignoff(1)">Submit Strategy For Teacher Approval</button>
+                    </div>
+
+                    <div class="question-block">
+                        <div class="instruction-step"><strong>9. Gather all needed materials from your equipment bin to conduct your planned investigation.</strong></div>
+                        <div class="instruction-step">
+                            <strong>10. Working with your partner, perform your planned investigation.</strong><br>
+                            • If your planned investigation provides both pieces of required evidence, move on to Step 11.<br>
+                            • If your planned investigation does not provide evidence for current and a produced magnetic field, revise your investigation.
                         </div>
-                        <p class="p2-qtext" style="margin-top:10px;"><strong>2b.</strong> Justify your answer mathematically or conceptually using Ohm's Law (V = IR).</p>
-                        <textarea id="p2_q2b" rows="3" placeholder="Connect resistance drop to current change and field boosts..." oninput="saveP2Data('p2_q2b')"></textarea>
                     </div>
 
-                    <div class="p2-qblock">
-                        <div class="p2-qtitle">Question 3</div>
-                        <p class="p2-qtext">Draw a detailed vector map showing magnetic field loops generated around your wrapped coil lines during steady-state DC power coupling.</p>
-                        <div id="p2_q3_sketch_container"></div>
+                    <div class="question-block">
+                        <label>11. Describe or illustrate the observational data that provides evidence that an electric current can produce a magnetic field.</label>
+                        <textarea id="p1-q11" rows="2" class="autosave-input" placeholder="Record telemetry findings or compass needle deflection details here..."></textarea>
+                    </div>
+                </div>
+
+                <div id="p1Block-2" style="display:none;">
+                    <div style="background: var(--primary-color); color: white; padding: 6px 10px; font-weight: bold; border-radius: 4px; font-size: 13px; margin-bottom: 12px;">
+                        Session 1: Part 2 - Propose and test a modification of the experimental setup in Part 1 to demonstrate how this modification affects the strength of the magnetic field produced.
                     </div>
 
-                    <div class="p2-qblock">
-                        <div class="p2-qtitle">Question 4</div>
-                        <p class="p2-qtext">At the microscopic layer, explain how changing magnetic flux forces valence electrons inside copper lines to execute work and generate an active potential difference.</p>
-                        <textarea id="p2_q4" rows="3" placeholder="Detail microscopic interaction lines connecting shifting field forces directly to charge drift velocities..." oninput="saveP2Data('p2_q4')"></textarea>
+                    <div class="question-block">
+                        <label>12. Propose a modification in the experimental setup in Part 1 that will produce a magnetic field with a different magnetic field strength.</label>
+                        <textarea id="p1-q12" rows="3" class="autosave-input" placeholder="Propose hardware modification (e.g., iron nail core, turns change)..."></textarea>
                     </div>
 
-                    <div class="p2-qblock">
-                        <div class="p2-qtitle">Question 5a & 5b</div>
-                        <p class="p2-qtext"><strong>5a.</strong> Why does increasing the speed at which a magnet passes through a coil increase the magnitude of the induced EMF?</p>
-                        <textarea id="p2_q5a" rows="3" placeholder="Incorporate Faraday's law of induction into your explanation..." oninput="saveP2Data('p2_q5a')"></textarea>
-                        <p class="p2-qtext" style="margin-top:10px;"><strong>5b.</strong> Contrast this effect against your multimeter findings at lower entry velocities.</p>
-                        <textarea id="p2_q5b" rows="3" placeholder="Describe display sampling limitations or visual observation lag trends..." oninput="saveP2Data('p2_q5b')"></textarea>
+                    <div style="background:#edf2f7; padding:10px; border-radius:6px; margin-bottom:12px; font-size:12px; border: 1px dashed var(--primary-color);">
+                        <strong>13. Get teacher approval to continue and test the proposed modification.</strong>
+                        <button style="width:100%; margin-top:6px; padding:6px; background:var(--primary-color); border:none; color:white; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="grantTeacherSignoff(2)">Request Modification Run Teacher Approval</button>
                     </div>
 
-                    <div class="p2-qblock">
-                        <div class="p2-qtitle">Question 6</div>
-                        <p class="p2-qtext">State Lenz's Law and explain how it directly demonstrates the principle of Conservation of Energy within closed electromagnetic frameworks.</p>
-                        <textarea id="p2_q6" rows="3" placeholder="Describe back-EMF opposing magnetic fields and mechanical work inputs required..." oninput="saveP2Data('p2_q6')"></textarea>
+                    <div class="question-block">
+                        <div class="instruction-step">
+                            <strong>14. Working with your partner:</strong><br>
+                            • gather materials needed for your proposed modification; and<br>
+                            • modify your experimental setup and test the proposed modification.
+                        </div>
                     </div>
 
-                    <div class="p2-qblock">
-                        <div class="p2-qtitle">Question 7</div>
-                        <p class="p2-qtext">Provide a clear vector sketch mapping flux profiles when a neodymium magnet stack is held completely motionless directly inside the induction cylinder.</p>
-                        <div id="p2_q7_sketch_container"></div>
+                    <div class="question-block">
+                        <label>15. Describe or illustrate the observational data that provides evidence for the change in the magnetic field strength caused by the modification in the experimental setup.</label>
+                        <textarea id="p1-q15" rows="3" class="autosave-input" placeholder="Record adjusted compass dial deviation angles or metrics observed..."></textarea>
+                    </div>
+                </div>
+
+                <div id="p1Block-3" style="display:none;">
+                    <div class="rubric-header-box">
+                        <strong>Criteria:</strong> Your investigation plan must include:<br>
+                        • a method for changing a magnetic field;<br>
+                        • evidence of a current; and<br>
+                        • evidence for how a modification of the experimental setup affects a produced current.<br><br>
+                        <strong>Constraints:</strong><br>
+                        • limited to provided apparatus items (including the custom constructed 2-foot PVC induction spool track)<br>
+                        • <strong>use of batteries is prohibited</strong>
                     </div>
 
-                    <div class="p2-qblock">
-                        <div class="p2-qtitle">Question 8a & 8b</div>
-                        <p class="p2-qtext"><strong>8a.</strong> A moving-coil microphone uses a diaphragm connected to a coil near a magnet. Propose one modification to the microphone design to increase the size of the signal sent to a recording device.</p>
-                        <input type="text" id="p2_q8a" placeholder="e.g., Increase total internal wire wrap configurations..." oninput="saveP2Data('p2_q8a')">
-                        <p class="p2-qtext" style="margin-top:10px;"><strong>8b.</strong> Explain the physical relationship between your chosen design parameter change and the resulting output voltage line spikes.</p>
-                        <textarea id="p2_q8b" rows="3" placeholder="Relate structural flux cuts to mathematical output adjustments..." oninput="saveP2Data('p2_q8b')"></textarea>
+                    <div class="question-block">
+                        <label>16. Review the equipment bin materials provided and discuss how they could be used to address the criteria provided.</label>
+                        <textarea id="p1-q16" rows="2" class="autosave-input" placeholder="Discuss battery-free induction material roles here..."></textarea>
+                    </div>
+
+                    <div style="background: var(--primary-color); color: white; padding: 6px 10px; font-weight: bold; border-radius: 4px; font-size: 13px; margin-bottom: 12px;">
+                        Session 1: Part 3 - Plan and conduct an investigation to provide evidence that a changing magnetic field can produce an electric current.
+                    </div>
+
+                    <div class="question-block">
+                        <label>17. Describe a method for producing a changing magnetic field with a magnet using the 2-foot PVC tube setup.</label>
+                        <textarea id="p1-q17" rows="2" class="autosave-input" placeholder="Describe mechanical drop sequence down the PVC barrel axis..."></textarea>
+                    </div>
+
+                    <div class="question-block">
+                        <label>18. Identify an item from the list of materials that will provide evidence of a current and explain how it indicates the presence of a current.</label>
+                        <textarea id="p1-q18" rows="2" class="autosave-input" placeholder="Identify indicators (e.g., LED illumination, multimeter value change)..."></textarea>
+                    </div>
+
+                    <div class="question-block">
+                        <label>19. List all the materials from the equipment bin that will be needed to complete this part.</label>
+                        <textarea id="p1-q19" rows="2" class="autosave-input" placeholder="List needed materials (Ensure no battery is listed)..."></textarea>
+                    </div>
+
+                    <div class="question-block">
+                        <label>20. Develop a model to show your initial experimental setup. Label the model.</label>
+                        <div class="instruction-step">Assemble your physical tube elements progressively via the "Rig Guide Assembly Track" on the left panel to establish your structural visuals.</div>
+                        <textarea id="p1-q20" rows="2" class="autosave-input" placeholder="Describe layout constraints or label layers here..."></textarea>
+                    </div>
+
+                    <div class="question-block">
+                        <label>21. Construct a step-by-step investigation plan to collect the evidence of a produced electric current.</label>
+                        <textarea id="p1-q21" rows="3" class="autosave-input" placeholder="Write step-by-step procedure for battery-free induction run..."></textarea>
+                    </div>
+
+                    <div style="background:#edf2f7; padding:10px; border-radius:6px; margin-bottom:12px; font-size:12px; border: 1px dashed var(--primary-color);">
+                        <strong>22. Present your investigation plan to the teacher for approval.</strong>
+                        <button style="width:100%; margin-top:6px; padding:6px; background:var(--primary-color); border:none; color:white; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="grantTeacherSignoff(3)">Approve Induction Protocol Setup</button>
+                    </div>
+
+                    <div class="question-block">
+                        <div class="instruction-step"><strong>23. Gather all needed equipment bin materials to conduct your planned investigation.</strong></div>
+                        <div class="instruction-step">
+                            <strong>24. Working with your partner, perform your planned investigation.</strong>
+                        </div>
+                    </div>
+
+                    <div class="question-block">
+                        <label>25. Describe or illustrate the observational data that provides evidence that a changing magnetic field can produce an electric current.</label>
+                        <textarea id="p1-q25" rows="2" class="autosave-input" placeholder="Record induced EMF potential difference spikes from the drop trigger run..."></textarea>
+                    </div>
+                </div>
+
+                <div id="p1Block-4" style="display:none;">
+                    <div style="background: var(--primary-color); color: white; padding: 6px 10px; font-weight: bold; border-radius: 4px; font-size: 13px; margin-bottom: 12px;">
+                        Session 1: Part 4 - Propose and test a modification of the experimental setup in Part 3 to demonstrate how this modification affects the induced potential difference that produces the electric current.
+                    </div>
+
+                    <div class="question-block">
+                        <label>26. Propose a modification of the experimental setup in Part 3 that will produce an observable, non-zero current that is different than the current produced in Part 3.</label>
+                        <textarea id="p1-q26" rows="3" class="autosave-input" placeholder="Propose dynamic variation strategy (e.g., changing wire winding turn density count)..."></textarea>
+                    </div>
+
+                    <div style="background:#edf2f7; padding:10px; border-radius:6px; margin-bottom:12px; font-size:12px; border: 1px dashed var(--primary-color);">
+                        <strong>27. Get teacher approval to continue and test the proposed modification.</strong>
+                        <button style="width:100%; margin-top:6px; padding:6px; background:var(--primary-color); border:none; color:white; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="grantTeacherSignoff(4)">Authorize Step 27 Variant Field Tests</button>
+                    </div>
+
+                    <div class="question-block">
+                        <div class="instruction-step">
+                            <strong>28. Working with your partner:</strong><br>
+                            • gather materials needed for your proposed modification; and<br>
+                            • modify your experimental setup and test the proposed modification.
+                        </div>
+                    </div>
+
+                    <div class="question-block">
+                        <label>29. Describe or illustrate the observational data that provides evidence for the change in the produced current caused by the modification of the experimental setup.</label>
+                        <textarea id="p1-q29" rows="3" class="autosave-input" placeholder="Record peak potential variance outcomes observed on the meter..."></textarea>
+                    </div>
+
+                    <div style="background:#e6fffa; border:1px solid #319795; padding:12px; border-radius:6px; font-size:12px; color:#234e52; margin-top: 10px;">
+                        <strong>30. Clean up your work area and return all equipment bin materials to the location indicated by the teacher.</strong>
+                        <button style="width:100%; margin-top:6px; background:#319795; color:white; border:none; padding:6px; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="executeStationSanitization()">Clear Workspace Floor &amp; Return Materials</button>
                     </div>
                 </div>
             </div>
+
+            <div class="packet-view-wrapper" id="packetPanelSection-2">
+                <div style="font-size:11.5px; font-weight:bold; color:#718096; text-transform:uppercase; margin-bottom:8px; border-bottom:1px solid #e2e8f0; padding-bottom:3px;">
+                    Student Answer Packet 2: Analysis and Evaluation Probes
+                </div>
+
+                <div class="question-block">
+                    <label>1. In Part 2, you modified your experimental setup to change the strength of the produced magnetic field. Describe how your modification caused this change.</label>
+                    <textarea id="p2-q1" rows="2" class="autosave-input" placeholder="Provide evaluation data mechanical rationale..."></textarea>
+                </div>
+
+                <div class="question-block">
+                    <label>2. A student successfully produced a magnetic field using a straight wire in a simple circuit. The student modified the setup by replacing the wire with a straight wire that has less resistance.</label>
+                    <span style="font-size:12px; font-weight:bold; color:#4a5568;">a. Select the appropriate box to indicate how the produced magnetic field was affected:</span>
+                    <div class="option-container">
+                        <div class="option-row"><input type="radio" name="p2q2a" value="weaker" class="autosave-radio"> <span>The magnetic field was weaker.</span></div>
+                        <div class="option-row"><input type="radio" name="p2q2a" value="stronger" class="autosave-radio"> <span>The magnetic field was stronger.</span></div>
+                        <div class="option-row"><input type="radio" name="p2q2a" value="unchanged" class="autosave-radio"> <span>The magnetic field was unchanged.</span></div>
+                    </div>
+                    <label style="margin-top:10px;">b. Use Ohm's Law to describe how the decrease in resistance affects the magnetic field:</label>
+                    <textarea id="p2-q2b" rows="2" class="autosave-input" placeholder="Apply Ohm's law (I = V/R) and explain why current alters field output metrics..."></textarea>
+                </div>
+
+                <div class="question-block">
+                    <label>3. The model on the left represents a motor consisting of a magnet surrounded by three stationary electromagnet coils. The spinning of the output shaft of the motor can be simulated with a compass in place of the magnet, as seen in the model on the right.</label>
+                    
+                    <div style="display:flex; gap:10px; justify-content:space-around; font-size:10px; font-weight:bold; text-align:center;">
+                        <div>
+                            <span>Motor Interior Layout</span>
+                            <div class="vector-canvas" style="width:130px;">
+                                <div class="motor-spoke spoke-a">Coil A</div><div class="motor-spoke spoke-c">Coil C</div><div class="motor-spoke spoke-d">Coil B</div>
+                                <div class="center-rotor"><div class="rotor-magnet"></div></div>
+                            </div>
+                        </div>
+                        <div>
+                            <span>Simulated Motor Compass Rig</span>
+                            <div class="vector-canvas" style="width:130px;">
+                                <div class="motor-spoke spoke-a">Coil A</div><div class="motor-spoke spoke-c">Coil C</div><div class="motor-spoke spoke-d">Coil B</div>
+                                <div class="center-rotor"><div class="rotor-compass"><div class="rotor-compass-needle"></div></div></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <label style="margin-top:10px;">Based on the models, explain how the simulated motor could be used to model the physical direction the motor shaft spins.</label>
+                    <textarea id="p2-q3" rows="3" class="autosave-input" placeholder="Analyze alignment behaviors between tracking indicator arrays and shifting magnetic poles..."></textarea>
+                </div>
+
+                <div class="question-block">
+                    <label>Groups of students use identical materials to perform an investigation. The experimental setup includes an LED connected to a loop of wire. The students observe what happens when a horseshoe magnet is moved relative to one side of the wire. Assume the magnetic field between the poles of the horseshoe magnet is uniform.</label>
+                    
+                    <div class="led-bench-diagram">
+                        <div style="position:absolute; top:2px; left:10px; font-size:10px; color:#718096; font-weight:bold;">Group A: Parallel Motion Track</div>
+                        <div style="position:absolute; bottom:2px; left:10px; font-size:10px; color:#718096; font-weight:bold;">Group B/C: Perpendicular Paths</div>
+                        <div class="pole-block" style="position:absolute; left:40px; top:15px;">N</div>
+                        <div class="pole-block" style="position:absolute; left:40px; bottom:15px;">S</div>
+                        <div class="wire-span"></div>
+                        <div class="led-node" style="left:120px;"></div>
+                    </div>
+
+                    <span style="font-size:12px; font-weight:bold; color:#4a5568; display:block; margin-top:8px;">Table 2: Experimental Observations Matrix</span>
+                    <table class="data-table">
+                        <thead>
+                            <tr><th>Group Identifier</th><th>Magnet Motion Relative to Magnetic Field Grid</th><th>Light Emitted from LED</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><strong>Group A</strong></td><td>Parallel Orientation Axis</td><td>No Light Output</td></tr>
+                            <tr><td><strong>Group B</strong></td><td>Perpendicular Orientation Axis</td><td>Yes - Pulse Light Emitted</td></tr>
+                            <tr><td><strong>Group C</strong></td><td>Perpendicular Axis (Stationary Wire Frame)</td><td>No Light Output</td></tr>
+                        </tbody>
+                    </table>
+
+                    <label style="margin-top:12px;">Based on the evidence in Table 2 and the diagram, explain why the direction in which Group B moved the magnet caused light to be emitted from the LED.</label>
+                    <textarea id="p2-q6" rows="3" class="autosave-input" placeholder="Contrast orthogonal tracking vectors against parallel vectors regarding Faraday flux lines cutting through wire loops..."></textarea>
+                </div>
+
+                <div class="question-block">
+                    <label>8. Microphones convert sound waves into electrical signals by moving a coil of wire in a magnetic field. The sound waves cause a thin membrane and its attached coil inside the microphone to vibrate, producing a current in the coil. The production of current in a microphone is similar to the production of current in a coil using a magnet.</label>
+                    
+                    <div style="display:flex; justify-content:center; margin:8px 0;">
+                        <div class="mic-box">
+                            <div style="position:absolute; top:2px; left:2px; font-size:8px; color:#718096; font-weight:bold;">Model of Microphone Interior Mechanism</div>
+                            <div class="mic-diaphragm"></div>
+                            <div style="position:absolute; left:2px; top:45px; font-size:9px; font-weight:bold;">Sound In</div>
+                            <div class="mic-coil-sleeve"></div>
+                            <div class="mic-magnet-core"><span>N</span><span>S</span></div>
+                            <div style="position:absolute; left:22px; top:70px; font-size:8px; color:#4a5568;">Coil attached to sleeve</div>
+                        </div>
+                    </div>
+
+                    <label>a. What could the student do with the same tuning fork to produce a greater current in the microphone?</label>
+                    <textarea id="p2-q8a" rows="2" class="autosave-input" placeholder="How can you mechanically alter the acoustic input to boost electrical currents?"></textarea>
+                    
+                    <label style="margin-top:10px;">b. Explain how this change would increase the current produced in the microphone:</label>
+                    <textarea id="p2-q8b" rows="2" class="autosave-input" placeholder="Explain using energy transfer, amplitude variations, and rate of flux intersection parameters..."></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 310px 1fr; gap: 15px; margin-top: 15px; height: 150px;">
+        <div class="panel dark-workspace-panel" style="justify-content: center;">
+            <div class="control-block dark-control-block">
+                <label for="turnControl">Wire Spool Loop Density Configuration:</label>
+                <select id="turnControl" onchange="adjustRigTurns()">
+                    <option value="300">300 Turns Baseline Helix</option>
+                    <option value="500">500 Turns High EMF Helix</option>
+                </select>
+            </div>
+            <button class="action-trigger-btn" id="btnDropMagnetSimulation" onclick="executeFaradayDropTrial()" disabled>Simulate Magnet Pass-Through Drop</button>
+        </div>
+        
+        <div class="panel">
+            <h3 style="border-color:#4a5568; color:#4a5568; font-size:12px; margin-bottom:5px;">Live Laboratory Notebook Log Stream</h3>
+            <div id="terminalFeed">System terminal initialized. Type student identifiers or process rig structural components to run simulations.</div>
         </div>
     </div>
 </body>
 </html>
+
