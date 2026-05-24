@@ -58,29 +58,39 @@ def save_state():
     student_name = lab_state_payload.get('studentName', 'Anonymous Student').strip() or 'Anonymous Student'
     current_time = datetime.now().strftime('%Y-%m-%d %H:%M')
 
-    # --- GROUP 2: PROGRESSION & VELOCITY MILESTONES ---
-    # Detect which master view tab they are currently looking at (Packet 1 vs Packet 2)
-    current_packet = lab_state_payload.get('activePacketTab', 'Packet 1') 
-
-    # Detect which sub-tab part they are on within Packet 1 (Part 1, 2, 3, or 4)
-    current_part = lab_state_payload.get('activePartTab', 'Part 1')
-
-    # Extract their mechanical build status on the assembly track (Phase 1 to 5)
-    max_rig_phase = lab_state_payload.get('rigLevel', 0)
-
-    # Calculate how many total teacher sign-offs they have actually earned
+    # --- GROUP 2: PROGRESSION MILESTONES (CALCULATED) ---
+    # 1. Read the teacher sign-offs map from your payload
     signoffs = lab_state_payload.get('signoffs', {})
+
+    # 2. Infer the current part based on unlocked sections
+    if signoffs.get('4') or signoffs.get(4):
+        current_part = 'Cleaned Up / Done'
+    elif signoffs.get('3') or signoffs.get(3):
+        current_part = 'Part 4 (Helix Modifications)'
+    elif signoffs.get('2') or signoffs.get(2):
+        current_part = 'Part 3 (Battery-Free Induction)'
+    elif signoffs.get('1') or signoffs.get(1):
+        current_part = 'Part 2 (Magnetic Setup Modifications)'
+    else:
+        current_part = 'Part 1 (Investigation Design)'
+
+    # 3. Calculate total approved parts (0 to 4)
     approved_parts_count = sum(1 for v in signoffs.values() if v is True)
 
-    # --- GROUP 3: REAL-TIME QUESTION METRICS (COMPLETION COUNTS) ---
+    # 4. Extract mechanical hardware assembly track level (Phase 1 to 5)
+    max_rig_phase = lab_state_payload.get('rigLevel', 0)
 
-    # 1. Scan Packet 1 written inputs (9 total textareas)
+    # --- GROUP 3: QUESTION METRICS & PACKET INFERENCE ---
+    # Count Packet 1 answers
     p1_questions = ['p1-q2', 'p1-q3', 'p1-q4', 'p1-q5', 'p1-q6', 'p1-q7', 'p1-q11', 'p1-q12', 'p1-q15']
     p1_answered_count = sum(1 for q in p1_questions if lab_state_payload.get(q, '').strip())
 
-    # 2. Scan Packet 2 inputs (6 textareas + 1 radio button configuration = 7 total inputs)
+    # Count Packet 2 answers
     p2_questions = ['p2-q1', 'p2q2a', 'p2-q2b', 'p2-q3', 'p2-q6', 'p2-q8a', 'p2-q8b']
     p2_answered_count = sum(1 for q in p2_questions if str(lab_state_payload.get(q, '')).strip())
+
+    # Infer current packet view: If they answered anything in P2, they are in Packet 2!
+    current_packet = 'Packet 2 (Analysis)' if p2_answered_count > 0 else 'Packet 1 (Design)'
 
     # --- HANDOFF TO GOOGLE SHEETS API ---
     # Send all 8 cleanly aggregated analytics variables out to the spreadsheet rows
