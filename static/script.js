@@ -659,4 +659,41 @@
             document.title = originalTitle;
         }
 
-        
+// =====================================================================
+// AUTOMATED HEARTBEAT: Streams a class progress snapshot every 5 mins
+// =====================================================================
+setInterval(function() {
+    const studentName = document.getElementById('packetNameInput')?.value.trim();
+    if (!studentName) return; 
+
+    const textValues = {};
+    document.querySelectorAll('.autosave-input').forEach(elem => { textValues[elem.id] = elem.value; });
+
+    const radioValues = {};
+    document.querySelectorAll('.autosave-radio').forEach(elem => {
+        if (elem.checked) radioValues[elem.name] = elem.value;
+    });
+
+    // 1. Build your standard full state tracking map
+    const labStatePayload = {
+        studentName: studentName,
+        textFields: textValues,
+        radioFields: radioValues,
+        rigLevel: typeof rigConstructionLevel !== 'undefined' ? rigConstructionLevel : 1,
+        signoffs: typeof validatedTeacherSignoffs !== 'undefined' ? validatedTeacherSignoffs : {}
+    };
+
+    console.log("Sending progress tracking frame to Looker Studio...");
+
+    // 2. Wrap the state payload with the isHeartbeat flag!
+    fetch('/api/save-state', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            isHeartbeat: true,
+            ...labStatePayload // Spreads out the state parameters seamlessly
+        })
+    })
+    .catch(err => console.warn("Background clock sync paused: ", err));
+
+}, 5 * 60 * 1000);

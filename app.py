@@ -46,49 +46,54 @@ def home():
 
 @app.route('/api/save-state', methods=['POST'])
 def save_state():
-    data = request.get_json()
-    lab_state_payload = data.get('state') 
+    data = request.get_json() or {}
+    
+    # Structural Change: Read your payload directly or look for nested objects
+    lab_state_payload = data.get('state') if 'state' in data else data
     
     if not lab_state_payload:
         return jsonify({"error": "No state provided"}), 400
         
-    # Commit securely to Firestore and get the unique 6-character short code
-    share_id = save_state_to_db(lab_state_payload)
+    # Check if this request is just a background progress tracking snapshot
+    is_heartbeat = data.get('isHeartbeat', False)
     
+    share_id = None
+    if not is_heartbeat:
+        # ONLY commit securely to Firestore if they explicitly clicked the link button
+        share_id = save_state_to_db(lab_state_payload)
+    
+    # Extract structural sub-maps to prevent extraction crashes
+    text_fields = lab_state_payload.get('textFields', {})
+    radio_fields = lab_state_payload.get('radioFields', {})
+    signoffs = lab_state_payload.get('signoffs', {})
+
     # --- GROUP 1: CORE SESSION IDENTIFIERS ---
     student_name = lab_state_payload.get('studentName', 'Anonymous Student').strip() or 'Anonymous Student'
     current_time = datetime.now().strftime('%Y-%m-%d %H:%M')
 
-    # --- GROUP 2: PROGRESSION MILESTONES (CALCULATED) ---
-    # 1. Read the teacher sign-offs map from your payload
-    signoffs = lab_state_payload.get('signoffs', {})
+    # --- GROUP 2: PROGRESSION MILESTONES ---
     approved_parts_count = sum(1 for v in signoffs.values() if v is True)
     max_rig_phase = lab_state_payload.get('rigLevel', 0)
 
     # --- GROUP 3: GRANULAR QUESTION COUNTS (MODULE BY MODULE) ---
-
-    # Packet 1 - Part 1 Completion (Out of 7)
     p1_p1_keys = ['p1-q2', 'p1-q3', 'p1-q4', 'p1-q5', 'p1-q6', 'p1-q7', 'p1-q11']
-    p1_part1_count = sum(1 for q in p1_p1_keys if lab_state_payload.get(q, '').strip())
+    p1_part1_count = sum(1 for q in p1_p1_keys if text_fields.get(q, '').strip())
 
-    # Packet 1 - Part 2 Completion (Out of 2)
     p1_p2_keys = ['p1-q12', 'p1-q15']
-    p1_part2_count = sum(1 for q in p1_p2_keys if lab_state_payload.get(q, '').strip())
+    p1_part2_count = sum(1 for q in p1_p2_keys if text_fields.get(q, '').strip())
 
-    # Packet 1 - Part 3 Completion (Out of 6)
     p1_p3_keys = ['p1-q16', 'p1-q17', 'p1-q18', 'p1-q19', 'p1-q20', 'p1-q21']
-    p1_part3_count = sum(1 for q in p1_p3_keys if lab_state_payload.get(q, '').strip())
+    p1_part3_count = sum(1 for q in p1_p3_keys if text_fields.get(q, '').strip())
 
-    # Packet 1 - Part 4 Completion (Out of 2)
     p1_p4_keys = ['p1-q26', 'p1-q29']
-    p1_part4_count = sum(1 for q in p1_p4_keys if lab_state_payload.get(q, '').strip())
+    p1_part4_count = sum(1 for q in p1_p4_keys if text_fields.get(q, '').strip())
 
-    # Packet 2 - Standalone Evaluation Module (Out of 7)
-    p2_keys = ['p2-q1', 'p2q2a', 'p2-q2b', 'p2-q3', 'p2-q6', 'p2-q8a', 'p2-q8b']
-    p2_answered_count = sum(1 for q in p2_keys if str(lab_state_payload.get(q, '')).strip())
+    p2_text_keys = ['p2-q1', 'p2-q2b', 'p2-q3', 'p2-q6', 'p2-q8a', 'p2-q8b']
+    p2_text_count = sum(1 for q in p2_text_keys if text_fields.get(q, '').strip())
+    p2_radio_count = 1 if radio_fields.get('p2q2a') else 0
+    p2_answered_count = p2_text_count + p2_radio_count
 
     # --- INFER ACTIVE STUDENT LOCATION ---
-    # We track exactly where they are working based on what they've filled out
     if p2_answered_count > 0:
         current_location = 'Module 2: Evaluation Packet'
     elif p1_part4_count > 0 or signoffs.get('3') or signoffs.get(3):
@@ -101,21 +106,16 @@ def save_state():
         current_location = 'Module 1: Part 1 (Investigation Design)'
 
     # --- HANDOFF TO GOOGLE SHEETS API ---
-    # Send all 8 cleanly aggregated analytics variables out to the spreadsheet rows
     push_row_to_sheets(
-        student_name,       # Col A
-        current_time,       # Col B
-        current_location,   # Col C
-        max_rig_phase,      # Col D
-        p1_part1_count,     # Col E
-        p1_part2_count,     # Col F
-        p1_part3_count,     # Col G
-        p1_part4_count,     # Col H
-        p2_answered_count   # Col I
+        student_name, current_time, current_location, max_rig_phase, 
+        p1_part1_count, p1_part2_count, p1_part3_count, p1_part4_count, p2_answered_count
     )   
     
-    # Return the response back to the student's browser layout
-    return jsonify({"shareId": share_id})
+    # Return response back cleanly
+    if is_heartbeat:
+        return jsonify({"status": "Heartbeat logged seamlessly"}), 200
+    else:
+        return jsonify({"shareId": share_id})
 
 
 @app.route('/api/load-state/<share_id>', methods=['GET'])
