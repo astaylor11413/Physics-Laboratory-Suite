@@ -61,48 +61,56 @@ def save_state():
     # --- GROUP 2: PROGRESSION MILESTONES (CALCULATED) ---
     # 1. Read the teacher sign-offs map from your payload
     signoffs = lab_state_payload.get('signoffs', {})
-
-    # 2. Infer the current part based on unlocked sections
-    if signoffs.get('4') or signoffs.get(4):
-        current_part = 'Cleaned Up / Done'
-    elif signoffs.get('3') or signoffs.get(3):
-        current_part = 'Part 4 (Helix Modifications)'
-    elif signoffs.get('2') or signoffs.get(2):
-        current_part = 'Part 3 (Battery-Free Induction)'
-    elif signoffs.get('1') or signoffs.get(1):
-        current_part = 'Part 2 (Magnetic Setup Modifications)'
-    else:
-        current_part = 'Part 1 (Investigation Design)'
-
-    # 3. Calculate total approved parts (0 to 4)
     approved_parts_count = sum(1 for v in signoffs.values() if v is True)
-
-    # 4. Extract mechanical hardware assembly track level (Phase 1 to 5)
     max_rig_phase = lab_state_payload.get('rigLevel', 0)
 
-    # --- GROUP 3: QUESTION METRICS & PACKET INFERENCE ---
-    # Count Packet 1 answers
-    p1_questions = ['p1-q2', 'p1-q3', 'p1-q4', 'p1-q5', 'p1-q6', 'p1-q7', 'p1-q11', 'p1-q12', 'p1-q15']
-    p1_answered_count = sum(1 for q in p1_questions if lab_state_payload.get(q, '').strip())
+    # --- GROUP 3: GRANULAR QUESTION COUNTS (MODULE BY MODULE) ---
 
-    # Count Packet 2 answers
-    p2_questions = ['p2-q1', 'p2q2a', 'p2-q2b', 'p2-q3', 'p2-q6', 'p2-q8a', 'p2-q8b']
-    p2_answered_count = sum(1 for q in p2_questions if str(lab_state_payload.get(q, '')).strip())
+    # Packet 1 - Part 1 Completion (Out of 7)
+    p1_p1_keys = ['p1-q2', 'p1-q3', 'p1-q4', 'p1-q5', 'p1-q6', 'p1-q7', 'p1-q11']
+    p1_part1_count = sum(1 for q in p1_p1_keys if lab_state_payload.get(q, '').strip())
 
-    # Infer current packet view: If they answered anything in P2, they are in Packet 2!
-    current_packet = 'Packet 2 (Analysis)' if p2_answered_count > 0 else 'Packet 1 (Design)'
+    # Packet 1 - Part 2 Completion (Out of 2)
+    p1_p2_keys = ['p1-q12', 'p1-q15']
+    p1_part2_count = sum(1 for q in p1_p2_keys if lab_state_payload.get(q, '').strip())
+
+    # Packet 1 - Part 3 Completion (Out of 6)
+    p1_p3_keys = ['p1-q16', 'p1-q17', 'p1-q18', 'p1-q19', 'p1-q20', 'p1-q21']
+    p1_part3_count = sum(1 for q in p1_p3_keys if lab_state_payload.get(q, '').strip())
+
+    # Packet 1 - Part 4 Completion (Out of 2)
+    p1_p4_keys = ['p1-q26', 'p1-q29']
+    p1_part4_count = sum(1 for q in p1_p4_keys if lab_state_payload.get(q, '').strip())
+
+    # Packet 2 - Standalone Evaluation Module (Out of 7)
+    p2_keys = ['p2-q1', 'p2q2a', 'p2-q2b', 'p2-q3', 'p2-q6', 'p2-q8a', 'p2-q8b']
+    p2_answered_count = sum(1 for q in p2_keys if str(lab_state_payload.get(q, '')).strip())
+
+    # --- INFER ACTIVE STUDENT LOCATION ---
+    # We track exactly where they are working based on what they've filled out
+    if p2_answered_count > 0:
+        current_location = 'Module 2: Evaluation Packet'
+    elif p1_part4_count > 0 or signoffs.get('3') or signoffs.get(3):
+        current_location = 'Module 1: Part 4 (Helix Modifications)'
+    elif p1_part3_count > 0 or signoffs.get('2') or signoffs.get(2):
+        current_location = 'Module 1: Part 3 (Battery-Free Induction)'
+    elif p1_part2_count > 0 or signoffs.get('1') or signoffs.get(1):
+        current_location = 'Module 1: Part 2 (Setup Modifications)'
+    else:
+        current_location = 'Module 1: Part 1 (Investigation Design)'
 
     # --- HANDOFF TO GOOGLE SHEETS API ---
     # Send all 8 cleanly aggregated analytics variables out to the spreadsheet rows
     push_row_to_sheets(
-        student_name,          # Column A
-        current_time,          # Column B
-        current_packet,        # Column C
-        current_part,          # Column D
-        max_rig_phase,         # Column E
-        approved_parts_count,  # Column F
-        p1_answered_count,     # Column G
-        p2_answered_count      # Column H
+        student_name,       # Col A
+        current_time,       # Col B
+        current_location,   # Col C
+        max_rig_phase,      # Col D
+        p1_part1_count,     # Col E
+        p1_part2_count,     # Col F
+        p1_part3_count,     # Col G
+        p1_part4_count,     # Col H
+        p2_answered_count   # Col I
     )   
     
     # Return the response back to the student's browser layout
