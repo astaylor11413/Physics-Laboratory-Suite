@@ -10,7 +10,7 @@ app = Flask(__name__)
 # Add an environment variable for the sheet name, defaulting to Production sheet if not set
 GOOGLE_SHEET_NAME = os.getenv("GOOGLE_SHEET_NAME", "Physics Lab Analytics")
 
-def push_row_to_sheets(student_name, current_time, current_packet, current_part, max_rig_phase, approved_parts_count, p1_answered_count, p2_answered_count):
+def push_row_to_sheets(student_name, current_time, current_location, max_rig_phase, p1_part1_count, p1_part2_count, p1_part3_count, p1_part4_count, p2_answered_count):
     try:
         cred_path = os.getenv("FIREBASE_KEY_PATH")
         if not cred_path:
@@ -24,15 +24,16 @@ def push_row_to_sheets(student_name, current_time, current_packet, current_part,
         
         # Append all 8 parameters in column order mapping to your Row 1 headers
         sheet.append_row([
-            student_name, 
-            current_time, 
-            current_packet, 
-            current_part, 
-            max_rig_phase, 
-            approved_parts_count, 
-            p1_answered_count, 
-            p2_answered_count
-        ])
+            student_name,         # Column A: Student Name
+            current_time,         # Column B: Submission Time
+            current_location,     # Column C: Current Lab Location (Inferred Module)
+            max_rig_phase,        # Column D: Max Rig Phase (1-5 Assembly Track)
+            p1_part1_count,       # Column E: Part 1 Completion Count ( /7 )
+            p1_part2_count,       # Column F: Part 2 Completion Count ( /2 )
+            p1_part3_count,       # Column G: Part 3 Completion Count ( /6 )
+            p1_part4_count,       # Column H: Part 4 Completion Count ( /2 )
+            p2_answered_count     # Column I: Packet 2 Completion Count ( /7 )
+])
         print(f"Real-Time Sync to [{GOOGLE_SHEET_NAME}]: Comprehensive telemetry logged for {student_name}")
     except Exception as e:
         print(f"Real-Time Sync Error: {str(e)}")
