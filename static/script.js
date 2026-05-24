@@ -607,19 +607,21 @@
             }
             document.body.removeChild(fallbackTextNode);
         }
-
+        
         function performMasterReset() {
-            if (!confirm("Are you sure you want to permanently clear your lab progress and answers?")) return;
+            if (!confirm("Are you sure you want to permanently clear your lab workbench progress?")) return;
             
-            localStorage.removeItem(STORAGE_KEY);
+            // 1. Remove draggable visual elements from canvas
             const tokens = document.querySelectorAll('.draggable-component');
             tokens.forEach(t => t.remove());
-
+        
+            // 2. Reset global hardware state variables to baseline
             deployedHardwareTokens = {};
             switchClosedState = false;
             rigConstructionLevel = 0;
             validatedTeacherSignoffs = { 1: false, 2: false, 3: false, 4: false };
-
+        
+            // 3. Reset hardware UI graphics and text labels
             document.getElementById('pvcLayerGraphic').style.display = 'none';
             document.getElementById('spacerLayerGraphic').style.display = 'none';
             document.getElementById('frameLayerGraphic').style.display = 'none';
@@ -627,24 +629,29 @@
             document.getElementById('tapeLayerGraphic').style.display = 'none';
             document.getElementById('visualRigStatusLabel').innerText = "NO TUBE INSTALLED";
             document.getElementById('btnDropMagnetSimulation').disabled = true;
-
-            document.getElementById('packetNameInput').value = "";
-            const forms = document.querySelectorAll('textarea');
-            forms.forEach(f => f.value = "");
-
-            const radioOptions = document.querySelectorAll('input[type="radio"]');
-            radioOptions.forEach(r => r.checked = false);
-
+        
+            // 4. Sync the remaining physical interactive sliders and switches to baseline
+            document.getElementById('turnControl').value = 100; // Assuming 100 is your default slider minimum
+            const physicalSwitch = document.getElementById('circuitSwitchCheckbox'); // Update ID if different
+            if (physicalSwitch) physicalSwitch.checked = false; 
+        
+            // 5. Reset progress step sidebar block configurations
             for (let i = 1; i <= 5; i++) {
                 const block = document.getElementById(`visualStepBlock-${i}`);
-                block.style.opacity = i === 1 ? "1" : "0.4";
-                block.style.cursor = i === 1 ? "pointer" : "not-allowed";
-                block.style.borderLeftColor = "#64748b";
-                block.querySelector('strong').style.color = i === 1 ? "#38bdf8" : "#64748b";
+                if (block) {
+                    block.style.opacity = i === 1 ? "1" : "0.4";
+                    block.style.cursor = i === 1 ? "pointer" : "not-allowed";
+                    block.style.borderLeftColor = "#64748b";
+                    const strongTag = block.querySelector('strong');
+                    if (strongTag) strongTag.style.color = i === 1 ? "#38bdf8" : "#64748b";
+                }
             }
-
-            document.getElementById('terminalFeed').innerText = "Lab environment state cleared to baseline standards.";
+        
+            // 6. Update logger timeline, recalculate, and push delta straight to storage key!
+            document.getElementById('terminalFeed').innerText = "Lab environment rig state cleared to baseline standards.";
             evaluatePhysicsEquations();
+            
+            // This uses your clean variables, keeps the student's text, and saves it all!
             saveProgressToStorage();
         }
 
