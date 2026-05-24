@@ -7,6 +7,9 @@ from datetime import datetime
 
 app = Flask(__name__)
 
+# Add an environment variable for the sheet name, defaulting to Production sheet if not set
+GOOGLE_SHEET_NAME = os.getenv("GOOGLE_SHEET_NAME", "Physics Lab Analytics")
+
 def push_row_to_sheets(student_name, rig_level, completed_count):
     try:
         cred_path = os.getenv("FIREBASE_KEY_PATH")
@@ -17,8 +20,10 @@ def push_row_to_sheets(student_name, rig_level, completed_count):
         sheet_creds = ServiceAccountCredentials.from_json_keyfile_name(cred_path, scope)
         client = gspread.authorize(sheet_creds)
         
-        # Open your sheet
-        sheet = client.open("Physics Lab Analytics").sheet1
+        
+        # DYNAMIC ROUTING: Opens "Physics Lab Analytics" on Prod
+        # or "Physics Lab Analytics - QA01" on QA
+        sheet = client.open(GOOGLE_SHEET_NAME).sheet1
         
         # Append a clean single row: [Name, Time, Rig Level, Total Steps Completed]
         current_time = datetime.now().strftime('%Y-%m-%d %H:%M')
