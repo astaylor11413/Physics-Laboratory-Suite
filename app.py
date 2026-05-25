@@ -10,7 +10,9 @@ app = Flask(__name__)
 # Add an environment variable for the sheet name, defaulting to Production sheet if not set
 GOOGLE_SHEET_NAME = os.getenv("GOOGLE_SHEET_NAME", "Physics Lab Analytics")
 
-def push_row_to_sheets(student_name, current_time, current_location, max_rig_phase, p1_part1_count, p1_part2_count, p1_part3_count, p1_part4_count, p2_answered_count):
+def push_row_to_sheets(student_name, current_time, current_location, max_rig_phase, 
+                        p1_part1_count, p1_part2_count, p1_part3_count, p1_part4_count, 
+                        p2_answered_count, total_completed, completion_rate):
     try:
         cred_path = os.getenv("FIREBASE_KEY_PATH")
         if not cred_path:
@@ -22,7 +24,7 @@ def push_row_to_sheets(student_name, current_time, current_location, max_rig_pha
         
         sheet = client.open(GOOGLE_SHEET_NAME).sheet1
         
-        # Append all 8 parameters in column order mapping to your Row 1 headers
+        # Append all 11 parameters in column order
         sheet.append_row([
             student_name,         # Column A: Student Name
             current_time,         # Column B: Submission Time
@@ -32,8 +34,10 @@ def push_row_to_sheets(student_name, current_time, current_location, max_rig_pha
             p1_part2_count,       # Column F: Part 2 Completion Count ( /2 )
             p1_part3_count,       # Column G: Part 3 Completion Count ( /6 )
             p1_part4_count,       # Column H: Part 4 Completion Count ( /2 )
-            p2_answered_count     # Column I: Packet 2 Completion Count ( /7 )
-])
+            p2_answered_count,    # Column I: Packet 2 Completion Count ( /7 )
+            total_completed,      # Column J: Total Items Completed ( /24 )
+            completion_rate       # Column K: Overall Completion Rate (%)
+        ])
         print(f"Real-Time Sync to [{GOOGLE_SHEET_NAME}]: Comprehensive telemetry logged for {student_name}")
     except Exception as e:
         print(f"Real-Time Sync Error: {str(e)}")
@@ -92,6 +96,13 @@ def save_state():
     p2_text_count = sum(1 for q in p2_text_keys if text_fields.get(q, '').strip())
     p2_radio_count = 1 if radio_fields.get('p2q2a') else 0
     p2_answered_count = p2_text_count + p2_radio_count
+    # --- GROUP 4: TOTAL COMPLETION METRICS ---
+    total_completed = (p1_part1_count + p1_part2_count + p1_part3_count + 
+                       p1_part4_count + p2_answered_count)
+    
+    total_max_questions = 24
+    # Calculate percentage and format as a clean string (e.g., "75.0%")
+    completion_rate = f"{(total_completed / total_max_questions) * 100:.1f}%"
 
     # --- INFER ACTIVE STUDENT LOCATION ---
     if p2_answered_count > 0:
@@ -108,7 +119,8 @@ def save_state():
     # --- HANDOFF TO GOOGLE SHEETS API ---
     push_row_to_sheets(
         student_name, current_time, current_location, max_rig_phase, 
-        p1_part1_count, p1_part2_count, p1_part3_count, p1_part4_count, p2_answered_count
+        p1_part1_count, p1_part2_count, p1_part3_count, p1_part4_count,
+        p2_answered_count,total_completed, completion_rate
     )   
     
     # Return response back cleanly
