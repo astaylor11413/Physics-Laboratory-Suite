@@ -1,3 +1,5 @@
+from datetime import datetime
+import pytz
 from flask import Flask, render_template, request, jsonify
 from database import save_state_to_db, load_state_from_db
 import gspread
@@ -52,28 +54,27 @@ def home():
 def save_state():
     data = request.get_json() or {}
     
-    # Structural Change: Read your payload directly or look for nested objects
     lab_state_payload = data.get('state') if 'state' in data else data
-    
     if not lab_state_payload:
         return jsonify({"error": "No state provided"}), 400
         
-    # Check if this request is just a background progress tracking snapshot
     is_heartbeat = data.get('isHeartbeat', False)
     
     share_id = None
     if not is_heartbeat:
-        # ONLY commit securely to Firestore if they explicitly clicked the link button
         share_id = save_state_to_db(lab_state_payload)
     
-    # Extract structural sub-maps to prevent extraction crashes
     text_fields = lab_state_payload.get('textFields', {})
     radio_fields = lab_state_payload.get('radioFields', {})
     signoffs = lab_state_payload.get('signoffs', {})
 
-    # --- GROUP 1: CORE SESSION IDENTIFIERS ---
+    # --- GROUP 1: CORE SESSION IDENTIFIERS (FIXED TIMEZONE BUG) ---
     student_name = lab_state_payload.get('studentName', 'Anonymous Student').strip() or 'Anonymous Student'
-    current_time = datetime.now().strftime('%Y-%m-%d %H:%M')
+    
+    # Force Python to read the specific local timezone of the classroom
+    # Common US values: 'US/Eastern', 'US/Central', 'US/Mountain', 'US/Pacific'
+    classroom_tz = pytz.timezone('US/Eastern') 
+    current_time = datetime.now(classroom_tz).strftime('%Y-%m-%d %H:%M')
 
     # --- GROUP 2: PROGRESSION MILESTONES ---
     approved_parts_count = sum(1 for v in signoffs.values() if v is True)
