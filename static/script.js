@@ -673,34 +673,51 @@ setInterval(function() {
     const studentName = document.getElementById('packetNameInput')?.value.trim();
     if (!studentName) return; 
 
+    // Extract text values safely
     const textValues = {};
     document.querySelectorAll('.autosave-input').forEach(elem => { textValues[elem.id] = elem.value; });
 
+    // Extract radio selections safely
     const radioValues = {};
     document.querySelectorAll('.autosave-radio').forEach(elem => {
         if (elem.checked) radioValues[elem.name] = elem.value;
     });
 
-    // 1. Build your standard full state tracking map
-    const labStatePayload = {
+    // Extract component visual coordinates safely
+    const componentPositions = {};
+    if (typeof deployedHardwareTokens !== 'undefined') {
+        Object.keys(deployedHardwareTokens).forEach(type => {
+            const targetId = (type === 'led') ? "liveLedTokenNode" : `tokenElement-${type}`;
+            const el = document.getElementById(targetId);
+            if (el) componentPositions[type] = { left: el.style.left, top: el.style.top };
+        });
+    }
+
+    // 1. Build the identical payload structure used by the manual button
+    const fullStatePayload = {
         studentName: studentName,
         textFields: textValues,
         radioFields: radioValues,
-        rigLevel: typeof rigConstructionLevel !== 'undefined' ? rigConstructionLevel : 1,
-        signoffs: typeof validatedTeacherSignoffs !== 'undefined' ? validatedTeacherSignoffs : {}
+        rigLevel: typeof rigConstructionLevel !== 'undefined' ? rigConstructionLevel : 0,
+        turnDensity: document.getElementById('turnControl')?.value || 100,
+        switchClosed: typeof switchClosedState !== 'undefined' ? switchClosedState : false,
+        signoffs: typeof validatedTeacherSignoffs !== 'undefined' ? validatedTeacherSignoffs : {},
+        hardwareTokens: componentPositions
     };
 
-    console.log("Sending progress tracking frame to Looker Studio...");
+    console.log("Transmitting structured payload frame to Looker Studio backend...");
 
-    // 2. Wrap the state payload with the isHeartbeat flag!
+    // 2. Pass it with the explicit 'state' wrapper so Python processes it normally!
     fetch('/api/save-state', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             isHeartbeat: true,
-            ...labStatePayload // Spreads out the state parameters seamlessly
+            state: fullStatePayload // Matches the manual save button perfectly!
         })
     })
+    .then(res => res.json())
+    .then(data => console.log("[Heartbeat Matrix Sync Complete]:", data.status))
     .catch(err => console.warn("Background clock sync paused: ", err));
 
 }, 5 * 60 * 1000);
