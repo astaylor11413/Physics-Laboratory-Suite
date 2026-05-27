@@ -25,7 +25,7 @@
         }
 
         function navigateP1Section(partId) {
-            for (let i = 1; i <= 5; i++) {
+            for (let i = 1; i <= 4; i++) {
                 document.getElementById(`p1TabBtn-${i}`).classList.toggle('active-sub', i === partId);
                 document.getElementById(`p1Block-${i}`).style.display = (i === partId) ? 'block' : 'none';
             }
