@@ -25,7 +25,7 @@
         }
 
         function navigateP1Section(partId) {
-            for (let i = 1; i <= 4; i++) {
+            for (let i = 1; i <= 5; i++) {
                 document.getElementById(`p1TabBtn-${i}`).classList.toggle('active-sub', i === partId);
                 document.getElementById(`p1Block-${i}`).style.display = (i === partId) ? 'block' : 'none';
             }
@@ -692,7 +692,7 @@ setInterval(function() {
             if (el) componentPositions[type] = { left: el.style.left, top: el.style.top };
         });
     }
-    
+
     // 1. Build the identical payload structure used by the manual button
     const fullStatePayload = {
         studentName: studentName,
