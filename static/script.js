@@ -693,12 +693,23 @@ setInterval(function() {
         });
     }
 
+    // Dynamic UI Checker: Infers the true rig level by inspecting the active sidebar blocks
+    let detectedRigLevel = 0;
+    for (let i = 1; i <= 5; i++) {
+        const block = document.getElementById(`visualStepBlock-${i}`);
+        // If the block exists and its opacity is 1 (or cursor is pointer), it's unlocked/completed!
+        if (block && block.style.opacity === "1") {
+            detectedRigLevel = i;
+        }
+    }
+
     // 1. Build the identical payload structure used by the manual button
     const fullStatePayload = {
         studentName: studentName,
         textFields: textValues,
         radioFields: radioValues,
-        rigLevel: typeof rigConstructionLevel !== 'undefined' ? rigConstructionLevel : 0,
+        //rigLevel: typeof rigConstructionLevel !== 'undefined' ? rigConstructionLevel : 0,
+        rigLevel: detectedRigLevel || (typeof rigConstructionLevel !== 'undefined' ? rigConstructionLevel : 0),
         turnDensity: document.getElementById('turnControl')?.value || 100,
         switchClosed: typeof switchClosedState !== 'undefined' ? switchClosedState : false,
         signoffs: typeof validatedTeacherSignoffs !== 'undefined' ? validatedTeacherSignoffs : {},
