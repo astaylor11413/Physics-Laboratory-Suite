@@ -12,19 +12,22 @@ app = Flask(__name__)
 # Add an environment variable for the sheet name, defaulting to Production sheet if not set
 GOOGLE_SHEET_NAME = os.getenv("GOOGLE_SHEET_NAME", "Physics Lab Analytics")
 
+cred_path = os.getenv("FIREBASE_KEY_PATH")
+if cred_path:
+    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+    sheet_creds = ServiceAccountCredentials.from_json_keyfile_name(cred_path, scope)
+    gspread_client = gspread.authorize(sheet_creds)
+else:
+    gspread_client = None
+
 def push_row_to_sheets(student_name, current_time, current_location, max_rig_phase, 
                         p1_part1_count, p1_part2_count, p1_part3_count, p1_part4_count, 
                         p2_answered_count, total_completed, completion_rate):
     try:
-        cred_path = os.getenv("FIREBASE_KEY_PATH")
-        if not cred_path:
+        if not gspread_client:
             return
         
-        scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-        sheet_creds = ServiceAccountCredentials.from_json_keyfile_name(cred_path, scope)
-        client = gspread.authorize(sheet_creds)
-        
-        sheet = client.open(GOOGLE_SHEET_NAME).sheet1
+        sheet = gspread_client.open(GOOGLE_SHEET_NAME).sheet1
         
         # Append all 11 parameters in column order
         sheet.append_row([

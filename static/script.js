@@ -398,12 +398,28 @@
             };
         }
 /**Saving and Loading Progress Section */
+        let saveTimeout;
+
         function attachSaveListeners() {
+            // Debounced: Prevents rapid-fire triggers while students type answers
             document.querySelectorAll('.autosave-input').forEach(elem => {
-                elem.addEventListener('input', () => saveProgressToStorage());
+                elem.addEventListener('input', () => {
+                    const indicator = document.getElementById('saveStatus');
+                    if (indicator) {
+                        indicator.innerText = "Typing...";
+                        indicator.style.color = "#94a3b8";
+                    }
+                    clearTimeout(saveTimeout);
+                    saveTimeout = setTimeout(saveProgressToStorage, 1000); // Wait 1 second after typing stops
+                });
             });
+
+            // Instantly saves when a multiple-choice radio button is clicked
             document.querySelectorAll('.autosave-radio').forEach(elem => {
-                elem.addEventListener('change', () => saveProgressToStorage());
+                elem.addEventListener('change', () => {
+                    clearTimeout(saveTimeout); // Clear any pending text saves to prevent collisions
+                    saveProgressToStorage();   // Save immediately
+                });
             });
         }
 
