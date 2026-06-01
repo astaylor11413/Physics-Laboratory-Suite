@@ -6,6 +6,7 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import os
 from datetime import datetime
+import threading
 
 app = Flask(__name__)
 
@@ -52,6 +53,8 @@ def push_row_to_sheets(student_name, current_time, current_location, max_rig_pha
 def home():
     return render_template('index.html')
 
+
+import threading
 
 @app.route('/api/save-state', methods=['POST'])
 def save_state():
@@ -125,22 +128,30 @@ def save_state():
     else:
         current_location = 'Module 1: Part 1 (Investigation Design)'
 
-    # --- HANDOFF TO GOOGLE SHEETS API ---
-    try:
-        push_row_to_sheets(
-            student_name, current_time, current_location, max_rig_phase, 
-            p1_part1_count, p1_part2_count, p1_part3_count, p1_part4_count,
-            p2_answered_count, total_completed, completion_rate
-        )   
-    except Exception as sheets_fault:
-        # If sheets limits drop out, log it, but proceed smoothly to serve the student their ID
-        print(f"NON-CRITICAL FAULT: Analytics engine throttled: {str(sheets_fault)}")
+    # --- ASYNCHRONOUS BACKGROUND THREAD HANDOFF ---
+    # Pass the analytical parsing work off to a separate, isolated worker thread.
+    def secure_sheets_execution_wrapper():
+        try:
+            push_row_to_sheets(
+                student_name, current_time, current_location, max_rig_phase, 
+                p1_part1_count, p1_part2_count, p1_part3_count, p1_part4_count,
+                p2_answered_count, total_completed, completion_rate
+            )
+        except Exception as sheets_fault:
+            print(f"BACKGROUND FAULT: Analytics engine throttled during thread execution: {str(sheets_fault)}")
 
+    # Initialize and fire the background thread worker
+    sheets_worker = threading.Thread(target=secure_sheets_execution_wrapper)
+    sheets_worker.daemon = True  # Allows thread to safely terminate if the master server crashes/reboots
+    sheets_worker.start()
+
+    # --- INSTANT USER DELIVERY ---
+    # The response is dispatched back immediately, well before Render's 90-second gateway threshold.
     if is_heartbeat:
         return jsonify({"status": "Heartbeat logged seamlessly", "verified": True}), 200
     else:
         return jsonify({"shareId": str(share_id), "status": "success"})
-
+    
 @app.route('/api/load-state/<share_id>', methods=['GET'])
 def load_state(share_id):
     lab_state_payload = load_state_from_db(share_id)
