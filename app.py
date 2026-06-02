@@ -6,25 +6,29 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import os
 from datetime import datetime
+import threading
 
 app = Flask(__name__)
 
 # Add an environment variable for the sheet name, defaulting to Production sheet if not set
 GOOGLE_SHEET_NAME = os.getenv("GOOGLE_SHEET_NAME", "Physics Lab Analytics")
 
+cred_path = os.getenv("FIREBASE_KEY_PATH")
+if cred_path:
+    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+    sheet_creds = ServiceAccountCredentials.from_json_keyfile_name(cred_path, scope)
+    gspread_client = gspread.authorize(sheet_creds)
+else:
+    gspread_client = None
+
 def push_row_to_sheets(student_name, current_time, current_location, max_rig_phase, 
                         p1_part1_count, p1_part2_count, p1_part3_count, p1_part4_count, 
                         p2_answered_count, total_completed, completion_rate):
     try:
-        cred_path = os.getenv("FIREBASE_KEY_PATH")
-        if not cred_path:
+        if not gspread_client:
             return
         
-        scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-        sheet_creds = ServiceAccountCredentials.from_json_keyfile_name(cred_path, scope)
-        client = gspread.authorize(sheet_creds)
-        
-        sheet = client.open(GOOGLE_SHEET_NAME).sheet1
+        sheet = gspread_client.open(GOOGLE_SHEET_NAME).sheet1
         
         # Append all 11 parameters in column order
         sheet.append_row([
@@ -50,6 +54,8 @@ def home():
     return render_template('index.html')
 
 
+import threading
+
 @app.route('/api/save-state', methods=['POST'])
 def save_state():
     data = request.get_json() or {}
@@ -62,7 +68,14 @@ def save_state():
     
     share_id = None
     if not is_heartbeat:
-        share_id = save_state_to_db(lab_state_payload)
+        try:
+            share_id = save_state_to_db(lab_state_payload)
+            # Critical Validation Check: If database generation fails, exit early
+            if not share_id:
+                return jsonify({"error": "Database engine failed to allocate storage key."}), 500
+        except Exception as db_err:
+            print(f"CRITICAL: Primary Database failure: {str(db_err)}")
+            return jsonify({"error": "Could not commit lab state to primary database snapshot."}), 500
     
     text_fields = lab_state_payload.get('textFields', {})
     radio_fields = lab_state_payload.get('radioFields', {})
@@ -71,8 +84,6 @@ def save_state():
     # --- GROUP 1: CORE SESSION IDENTIFIERS (FIXED TIMEZONE BUG) ---
     student_name = lab_state_payload.get('studentName', 'Anonymous Student').strip() or 'Anonymous Student'
     
-    # Force Python to read the specific local timezone of the classroom
-    # Common US values: 'US/Eastern', 'US/Central', 'US/Mountain', 'US/Pacific'
     classroom_tz = pytz.timezone('US/Eastern') 
     current_time = datetime.now(classroom_tz).strftime('%Y-%m-%d %H:%M')
 
@@ -97,15 +108,15 @@ def save_state():
     p2_text_count = sum(1 for q in p2_text_keys if text_fields.get(q, '').strip())
     p2_radio_count = 1 if radio_fields.get('p2q2a') else 0
     p2_answered_count = p2_text_count + p2_radio_count
+
     # --- GROUP 4: TOTAL COMPLETION METRICS ---
     total_completed = (p1_part1_count + p1_part2_count + p1_part3_count + 
                        p1_part4_count + p2_answered_count)
     
     total_max_questions = 24
-    # Calculate percentage and format as a clean string (e.g., "75.0%")
     completion_rate = f"{(total_completed / total_max_questions) * 100:.1f}%"
 
-    # --- INFER ACTIVE STUDENT LOCATION ---
+    # --- FIND ACTIVE STUDENT LOCATION ---
     if p2_answered_count > 0:
         current_location = 'Module 2: Evaluation Packet'
     elif p1_part4_count > 0 or signoffs.get('3') or signoffs.get(3):
@@ -117,20 +128,30 @@ def save_state():
     else:
         current_location = 'Module 1: Part 1 (Investigation Design)'
 
-    # --- HANDOFF TO GOOGLE SHEETS API ---
-    push_row_to_sheets(
-        student_name, current_time, current_location, max_rig_phase, 
-        p1_part1_count, p1_part2_count, p1_part3_count, p1_part4_count,
-        p2_answered_count,total_completed, completion_rate
-    )   
-    
-    # Return response back cleanly
+    # --- ASYNCHRONOUS BACKGROUND THREAD HANDOFF ---
+    # Pass the analytical parsing work off to a separate, isolated worker thread.
+    def secure_sheets_execution_wrapper():
+        try:
+            push_row_to_sheets(
+                student_name, current_time, current_location, max_rig_phase, 
+                p1_part1_count, p1_part2_count, p1_part3_count, p1_part4_count,
+                p2_answered_count, total_completed, completion_rate
+            )
+        except Exception as sheets_fault:
+            print(f"BACKGROUND FAULT: Analytics engine throttled during thread execution: {str(sheets_fault)}")
+
+    # Initialize and fire the background thread worker
+    sheets_worker = threading.Thread(target=secure_sheets_execution_wrapper)
+    sheets_worker.daemon = True  # Allows thread to safely terminate if the master server crashes/reboots
+    sheets_worker.start()
+
+    # --- INSTANT USER DELIVERY ---
+    # The response is dispatched back immediately, well before Render's 90-second gateway threshold.
     if is_heartbeat:
-        return jsonify({"status": "Heartbeat logged seamlessly"}), 200
+        return jsonify({"status": "Heartbeat logged seamlessly", "verified": True}), 200
     else:
-        return jsonify({"shareId": share_id})
-
-
+        return jsonify({"shareId": str(share_id), "status": "success"})
+    
 @app.route('/api/load-state/<share_id>', methods=['GET'])
 def load_state(share_id):
     lab_state_payload = load_state_from_db(share_id)

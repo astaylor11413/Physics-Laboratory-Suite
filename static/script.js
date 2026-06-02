@@ -398,12 +398,28 @@
             };
         }
 /**Saving and Loading Progress Section */
+        let saveTimeout;
+
         function attachSaveListeners() {
+            // Debounced: Prevents rapid-fire triggers while students type answers
             document.querySelectorAll('.autosave-input').forEach(elem => {
-                elem.addEventListener('input', () => saveProgressToStorage());
+                elem.addEventListener('input', () => {
+                    const indicator = document.getElementById('saveStatus');
+                    if (indicator) {
+                        indicator.innerText = "Typing...";
+                        indicator.style.color = "#94a3b8";
+                    }
+                    clearTimeout(saveTimeout);
+                    saveTimeout = setTimeout(saveProgressToStorage, 1000); // Wait 1 second after typing stops
+                });
             });
+
+            // Instantly saves when a multiple-choice radio button is clicked
             document.querySelectorAll('.autosave-radio').forEach(elem => {
-                elem.addEventListener('change', () => saveProgressToStorage());
+                elem.addEventListener('change', () => {
+                    clearTimeout(saveTimeout); // Clear any pending text saves to prevent collisions
+                    saveProgressToStorage();   // Save immediately
+                });
             });
         }
 
@@ -531,43 +547,40 @@
         }     
 
         async function generateShareLink() {
-            // 1. Grab the raw stringified JSON directly from localStorage
             const currentStateString = localStorage.getItem(STORAGE_KEY); 
-        
+
             if (!currentStateString) {
                 alert("No lab progress found to share! Make sure you've started the lab.");
                 return;
             }
-        
+
             try {
-                // 2. Parse it back into a clean JS Object
                 const payloadObject = JSON.parse(currentStateString);
-        
-                // 3. Send the object directly to your Flask backend
+
+                // Dispatches structural frame straight to protected python endpoint
                 const response = await fetch('/api/save-state', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ state: payloadObject }) 
                 });
-        
+
                 const data = await response.json();
-                
-                //Ensure the shareId actually exists and isn't undefined/empty
-                if (!response.ok || !data.shareId) {
-                    throw new Error(data.error || "Failed to retrieve a valid Share ID from the server.");
-                }
         
-                // 4. Generate the clean URL using the tiny ID from Flask
-                const shareUrl = new URL(window.location.origin);
+                // Integrity Validation Catch:
+                if (!response.ok || !data || !data.shareId) {
+                    throw new Error(data.error || "The database server rejected the request framework or returned an empty payload token.");
+                }
+
+                 const shareUrl = new URL(window.location.origin);
                 shareUrl.searchParams.set('id', data.shareId);
-                
-                // Copy to clipboard safely
+        
+                // Copy link output safely straight to clipboard
                 executeClipboardCopy(shareUrl.href);
                 return shareUrl.href;
-        
+
             } catch (err) {
-                console.error("Link generation failure:", err);
-                alert(`Could not generate share link: ${err.message}`);
+                console.error("Link generation execution matrix failure:", err);
+                alert(`Could not process snapshot configuration link: ${err.message}\n\nTip: If you're seeing this, wait 10 seconds and try hitting save again!`);
             }
         }
 
